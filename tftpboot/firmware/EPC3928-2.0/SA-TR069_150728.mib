@@ -1,0 +1,528 @@
+--**************************************************************************
+ --                                                                          
+ --    Copyright 2008 Scientific Atlanta, A Cisco Company                                   
+ --    All Rights Reserved                                                   
+ --    No portions of this material may be reproduced in any
+ --    form without the written permission of:                                                
+ --             Scientific Atlanta, A Cisco Company                                          
+ --             5030 Sugarloaf Pkwy                                     
+ --             Lawrenceville, Georgia 30044                                    
+ --                                                                          
+ --**************************************************************************
+ 
+ SA-TR069-MIB DEFINITIONS ::= BEGIN
+ IMPORTS
+         MODULE-IDENTITY, 
+         OBJECT-TYPE,
+         enterprises
+                 FROM SNMPv2-SMI
+         TruthValue
+                 FROM SNMPv2-TC
+         SnmpAdminString 
+                 FROM SNMP-FRAMEWORK-MIB
+         InetAddressType,
+         InetAddress
+                 FROM INET-ADDRESS-MIB ;
+ 
+ sa           OBJECT IDENTIFIER ::= { enterprises 1429 }
+ saModules    OBJECT IDENTIFIER ::= { sa 79 }
+ 
+ saTR069 MODULE-IDENTITY
+         LAST-UPDATED    "201409260000Z"
+         ORGANIZATION    "Cisco Systems, Inc."
+         CONTACT-INFO    "http://support.cisco.com"
+         DESCRIPTION
+             "Controls the configuration of TR-069 CWMP Client"
+ 
+         -- History
+	REVISION     "201409260000Z"
+	DESCRIPTION
+             "updated mibs description -CR-24613"
+
+	REVISION     "201408290000Z"
+	DESCRIPTION
+             "Added below mibs for TR181 -CR-24613.
+              saTR069ClientCwmpVersion,
+              saTR069ClientDefaultAcsPort,
+              saTR069ClientDefaultCRPort,
+              saTR069ClientACSOverride,
+              saTR069ClientIpStack,
+              saTR069DhcpOption group,
+              saTR069DataModelParameters group,
+              saTR069ApplySettings
+             "
+
+	REVISION     "201112190000Z"
+	DESCRIPTION
+             "Moved saModules line under comments"
+               
+	REVISION     "201109290000Z"
+	DESCRIPTION
+             "Updated the MIB CONTACT-INFO and saTR069ClientMode description -CR-19293"
+
+	REVISION     "201109280000Z"
+	DESCRIPTION
+		"Added saTR069ClientMode to Enable/ Disable TR69 thread"
+
+    
+    REVISION     "201101260000Z"
+	DESCRIPTION
+             "i) Changed saTR069 to saModules 6. It was saModules 5 before but cannot be used as there is other conflicting definition
+              ii) Changed saTR069ClientPeriodicInformInterval max value to 2147483647"     
+         
+	REVISION     "201101190000Z"
+    DESCRIPTION
+             "Initial release."
+			 
+             
+		::= { saModules 6 }
+
+
+saTR069ClientConfig   OBJECT IDENTIFIER ::=  { saTR069 1 }
+
+saTR069ClientMode OBJECT-TYPE
+    SYNTAX INTEGER  {
+        disable(0),
+        enable(1)
+        }
+    MAX-ACCESS  read-write 
+    STATUS      current
+    DESCRIPTION  
+            "Enabling this MIB starts the TR-069 client to communicate with ACS.
+             For TR181,this parameter is always return enable.
+            "
+    DEFVAL { 0 }
+    ::= { saTR069ClientConfig 1 }
+
+saTR069ClientAcsUrl OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..255))
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        " Sets the ACS Management Server URL.
+          This parameter is stored in non-vol and is NULL by default.
+          For TR181,Sets the value via CM config or snmp. if not, it always return NULL.
+          forex: 'http://myacs.acs.lab.sa
+        "
+    ::= { saTR069ClientConfig 2 }
+    
+saTR069ClientAcsUsername OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..255))
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        " Sets the username associated with the ACS Management Server.
+          This parameter is stored in non-vol and is NULL by default.
+          For TR181,Sets the value via CM config or snmp. if not, it always return NULL.
+        "
+    ::= { saTR069ClientConfig 3 }
+
+saTR069ClientAcsPassword OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..255))
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        " Sets the password associated with the ACS Management Server.
+          This parameter is stored in non-vol and is NULL by default.
+      
+          NOTE: This should be a hidden value in SNMPGET/SNMPWALK but user 
+                should be able to set this using SNMPSET
+        "
+    ::= { saTR069ClientConfig 4 }
+    
+saTR069ClientCrUsername OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..255))
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        " Set the username associated with the connection request from the ACS.
+          This parameter is stored in non-vol and is NULL by default.
+          For TR181,Sets the value via CM config or snmp. if not, it always return NULL.
+        "
+    ::= { saTR069ClientConfig 5 }
+
+saTR069ClientCrPassword OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..255))
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        " Set the password associated with the connection request from the ACS.
+          This parameter is stored in non-vol and is NULL by default.    
+          
+          NOTE: This should be a hidden value in SNMPGET/SNMPWALK but user 
+                should be able to set this using SNMPSET
+        "
+    ::= { saTR069ClientConfig 6 }
+    
+
+saTR069ClientPeriodicInform OBJECT-TYPE 
+    SYNTAX INTEGER  {
+        disable(0),
+        enable(1)
+        }
+    MAX-ACCESS  read-write 
+    STATUS      current
+    DESCRIPTION  
+            "Enable the TR-069 client, allowing informs to occur at the periodic rate."
+    DEFVAL { 1 }
+    ::= { saTR069ClientConfig 7 }
+
+saTR069ClientPeriodicInformInterval OBJECT-TYPE 
+    SYNTAX INTEGER  (1..2147483647)
+    UNITS	"Seconds"	
+    MAX-ACCESS  read-write 
+    STATUS      current
+    DESCRIPTION  
+            "Specify the periodic inform interval in seconds.
+             Not advisable to have inform interval less than 180 seconds (3 min).
+             For CWMP, the default value is 600.
+             For TR181, the default value is 300.
+            "
+    DEFVAL { 300 }
+    ::= { saTR069ClientConfig 8 }
+
+saTR069ClientAllowDocsisConfig OBJECT-TYPE 
+    SYNTAX INTEGER  {
+        disable(0),
+        enable(1)
+        }
+    MAX-ACCESS  read-write 
+    STATUS      current
+    DESCRIPTION  
+            "In operation, X_DOCSIS_AllowDocsisConfiguration in a factory-defaulted cable modem will be true, 
+             allowing the device to contact its ACS or an activation server using either a factory-default 
+             ACS URL and other parameters, or ACS URL and other parameters supplied in the DOCSIS configuration file.
+             Once the initial contact is established the ACS modifies the URL, and X_DOCSIS_AllowDocsisConfiguration 
+             is automatically set to false. Subsequent re-booting of the device will use the modified address is accordance with TR-069.
+             The ACS may relinquish this control by explicitly setting X_DOCSIS_AllowDocsisConfiguration to false. 
+             The next time the device reboots the URL can again be accepted from the DOCSSIS configuration file.
+             X_DOCSIS_AllowDocsisConfiguration also defaults to true, so resetting the device to factory defaults 
+             also re-enables the DOCSIS configuration file."
+    DEFVAL { 1 }
+    ::= { saTR069ClientConfig 9 }
+
+
+saTR069ClientConnReqUrl OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..255))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        " This is set by default during the initial bootup and always uses port with it.
+          Connection Request URL is used by the ACS to solicit Gateway and make the client checkin to ACS.
+          This parameter is stored in non-vol.
+          For CWMP ,the default port is 30005,and is http://<rg-wan-ip>:30005/ by default.
+          For TR181,the default port is 7547,and is http://<rg-wan-ip>:7547/ by default.
+        "
+    ::= { saTR069ClientConfig 10 }
+
+saTR069ClientAcsControlPanelUrl OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..255))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        " This mib is only supported by CWMP.
+          Set by the ACS when the client checks in. The user is re-directed to this link when try to access local GUI
+          This parameter is stored in non-vol and is NULL by default.
+        "
+    ::= { saTR069ClientConfig 11 }
+
+saTR069ClientDeviceIdentifier OBJECT-TYPE
+   SYNTAX INTEGER {
+       useSerialNumber(0),
+       useCmMacAddress(1)
+   }
+   MAX-ACCESS   read-write
+   STATUS       current
+   DESCRIPTION
+       "Defines the value used to identify this device with the ACS.  This value will show up in the ACS server under the Serial Number field.
+             useSerialNumber(0):       The InternetGatewayDevice.DeviceInfo.SerialNumber parameter will return the device's serial number (e.g. 234567890).
+             useCmMacAddress(1):    The InternetGatewayDevice.DeviceInfo.SerialNumber parameter will return the device's CM MAC address (e.g. 00407B1A2B3C).
+       "
+   DEFVAL { 0 }
+   ::= { saTR069ClientConfig 12 }
+
+saTR069ClientCwmpVersion OBJECT-TYPE
+    SYNTAX INTEGER {
+        cwmp-1-0(0),
+        cwmp-1-1(1),
+        cwmp-1-2(2),
+        cwmp-1-3(3)
+        }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This mib is only supported by TR181.
+         The current cwmp version.
+        "
+    ::= { saTR069ClientConfig 13 }
+
+saTR069ClientDefaultAcsPort OBJECT-TYPE
+    SYNTAX INTEGER (1..65535)
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This mib is only supported by TR181.
+         Sets the default port to use for ACS connections. This value is used if no port is specified in the ACS URL.
+        "
+    DEFVAL { 80 }
+    ::= { saTR069ClientConfig 14 }
+
+saTR069ClientDefaultCRPort OBJECT-TYPE
+    SYNTAX INTEGER (1..65535)
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        " This mib is only supported by TR181. 
+          Sets the default port to use for ACS connections.
+        "
+    DEFVAL { 7547 }
+    ::= { saTR069ClientConfig 15 }
+
+saTR069ClientACSOverride OBJECT-TYPE
+   SYNTAX INTEGER {
+       disable(0),
+       enable(1)
+   }
+   MAX-ACCESS   read-write
+   STATUS       current
+   DESCRIPTION
+       "This mib is only supported by TR181.
+        Specifies whether the ACS URL must always be the config file value or may be overridden from the ACS.
+       "
+   DEFVAL { 1 }
+   ::= { saTR069ClientConfig 16 }
+
+saTR069ClientIpStack OBJECT-TYPE
+   SYNTAX INTEGER {
+       ip-stack3(3)
+   }
+   MAX-ACCESS   read-only
+   STATUS       current
+   DESCRIPTION
+       "This mib is only supported by TR181.
+        The ip stack used for cwmp.
+       "
+   DEFVAL { 3 }
+   ::= { saTR069ClientConfig 17 }
+
+saTR069DhcpOption   OBJECT IDENTIFIER ::=  { saTR069 2 }
+
+saTR069AllowUseDhcpOpts OBJECT-TYPE
+    SYNTAX INTEGER  {
+        disable(0),
+        enable(1)
+        }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This mib is only supported by TR181.
+         Enables whether to look for configuration options from DHCP.
+        "
+    DEFVAL { 1 }
+    ::= { saTR069DhcpOption 1 }
+
+saTR069URL OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..255))
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        Sets the ACS Management Server URL.This is used for Dhcp Options.
+        Sets the value via Dhcp Option or snmp. if not, it always return NULL.
+       "
+    ::= { saTR069DhcpOption 2 }
+
+saTR069ProvisioningCode OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..64))
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        get/set Provisioning Code.This is used for Dhcp Options.
+        Sets the value via Dhcp Option or snmp. if not, it always return NULL.
+       "
+    ::= { saTR069DhcpOption 3 }
+
+saTR069CWMPRetryMinimumWaitInterval OBJECT-TYPE
+    SYNTAX INTEGER (1..65535)
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        get/set cwmp retry minimum wait interval.This is used for Dhcp Options.
+        Sets the value via Dhcp Option or snmp. if not, it always return 0.
+       "
+    DEFVAL { 0 }
+    ::= { saTR069DhcpOption 4 }
+
+saTR069CWMPRetryIntervalMultiplier OBJECT-TYPE
+    SYNTAX INTEGER (1000..65535)
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        getCWMP retry interval multiplier. This is used for Dhcp Options. 
+        Sets the value via Dhcp Option or snmp. if not, it always return 5000.
+       "
+    DEFVAL { 5000 }
+    ::= { saTR069DhcpOption 5 }
+
+saTR069ManufacturerOUI OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        The value for ManufacturerOUI,This is used for Dhcp Options.
+       "
+    ::= { saTR069DhcpOption 6 }
+
+saTR069SerialNumber OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        The InternetGatewayDevice.DeviceInfo.SerialNumber parameter.
+       "
+    ::= { saTR069DhcpOption 7 }
+
+saTR069ProductClass OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        The class of product. This is used for Dhcp Options.
+       "
+    ::= { saTR069DhcpOption 8 }
+
+saTR069DataModelParameters   OBJECT IDENTIFIER ::=  { saTR069 3}
+
+saTR069DeviceManufacturer OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        The value of Manufacturer is 'Broadcom'.
+       "
+    ::= { saTR069DataModelParameters 1 }
+
+saTR069DeviceManufacturerOUI OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        The value of ManufacturerOUI is '001018'
+       "
+    ::= { saTR069DataModelParameters 2 }
+
+saTR069DeviceModelName OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..64))
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        show the product model name.
+       "
+    ::= { saTR069DataModelParameters 3 }
+
+saTR069DeviceDescription OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..256))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        Same as SNMP sysDescr object.
+       "
+    ::= { saTR069DataModelParameters 4 }
+
+saTR069DeviceProductClass OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        The class of product.
+       "
+    ::= { saTR069DataModelParameters 5 }
+
+saTR069DeviceSerialNumber OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        The InternetGatewayDevice.DeviceInfo.SerialNumber parameter.
+       "
+    ::= { saTR069DataModelParameters 6 }
+
+saTR069DeviceHardwareVersion OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        The Device Hardware Version.
+       "
+    ::= { saTR069DataModelParameters 7 }
+
+saTR069DeviceSoftwareVersion OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        Same as SNMP docsDevSwCurrentVers object
+       "
+    ::= { saTR069DataModelParameters 8 }
+
+saTR069DeviceAddisionalSoftwareVersion OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        Comma-separated list (maximum length 64) of strings. Each entry is an 
+        additional version. Represents any additional software version information
+        the vendor might wish to supply.
+       "
+    ::= { saTR069DataModelParameters 9 }
+
+saTR069DeviceAddisionalHardwareVersion OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..64))
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        Comma-separated list (maximum length 64) of strings. Each entry is an 
+        additional version. Represents any additional hardware version 
+        information the vendor might wish to supply.
+       "
+    ::= { saTR069DataModelParameters 10 }
+
+saTR069DeviceProvisioningCode OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+       "This mib is only supported by TR181.
+        Identifier of the primary service provider and other provisioning information, 
+        which MAY be used by the ACS to determine service provider-specific customization
+        and provisioning parameters.
+       "
+    ::= { saTR069DataModelParameters 11 }
+
+saTR069ApplySettings OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This mib is only supported by TR181.
+         If set to true(1), TR69 all configure should be reconfig, and then TR69 start.
+         Always returns false(2) when read.
+        "
+    ::= { saTR069 4 }
+END

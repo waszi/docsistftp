@@ -1,0 +1,845 @@
+--**************************************************************************
+--                                                                          
+--    Copyright 2011 Cisco Systems, Inc.                                   
+--    All Rights Reserved                                                   
+--    No portions of this material may be reproduced in any
+--    form without the written permission of:                                                
+--             Cisco Systems Inc.                                           
+--             170 West Tasman Dr.                                    
+--             San Jose, CA 95134                                    
+--             USA                                                             
+--**************************************************************************
+
+SA-CM-MTA-MIB DEFINITIONS ::= BEGIN
+IMPORTS
+        MODULE-IDENTITY, 
+        OBJECT-TYPE,enterprises, 
+        Integer32
+                FROM SNMPv2-SMI
+        SnmpAdminString 
+                FROM SNMP-FRAMEWORK-MIB
+        TruthValue
+                FROM SNMPv2-TC ;
+                
+sa           OBJECT IDENTIFIER ::= { enterprises 1429 }
+saVoip       OBJECT IDENTIFIER ::= { sa 78 }
+
+saCmMta MODULE-IDENTITY
+        LAST-UPDATED    "201106150000Z"
+        ORGANIZATION    "Cisco Systems, Inc."
+        CONTACT-INFO    "http://support.cisco.com"
+        DESCRIPTION
+            "Controls the behavior of the Cable Modem
+             functional block in Embedded MTA devices.  
+             This MIB is active only at the Cable Modem IP address"
+
+        -- History
+        REVISION "20110615000Z"
+        DESCRIPTION 
+        		 "Changed description of saCmMtaCliAccessType to exclude option 5 
+        		 (enableTelnetPermanentViaWebpage) for D3.0 and D2.0 R2 model modems. -17559"
+        		   
+        REVISION "201010250000Z"
+        DESCRIPTION 
+        		 "Added saCmMtaProvSnmpSetCommunityString -17276"
+
+        REVISION "1005250000Z"
+        DESCRIPTION 
+        		 "Added saCmMtaGracefulReload Tree -15175"
+        		                       
+        REVISION	"09020500000Z"
+        DESCRIPTION
+        	"Added  saCmMtaPingTestInterval 
+    				saCmMtaPingTestFailEMTAThreshold 
+    				saCmMtaPingTestFailCMThreshold   
+    			Objects  - CR5752"
+        	
+        REVISION     "0807080000Z"
+        DESCRIPTION
+            "Added saCmMtaProvState (2012)" 
+
+        REVISION     "0804230000Z"
+        DESCRIPTION
+            "Added saCmMtaDhcpOptionSixty (2468)"
+
+        REVISION     "0804070000Z"
+        DESCRIPTION
+            "Added saCmMtaDhcpRebindRule (2452)"
+
+        REVISION     "0803170000Z"
+        DESCRIPTION
+            "Added saCmMtaIcmpReplyEnable (5660)"
+
+        REVISION     "0711160000Z"
+        DESCRIPTION
+            "Added enableTelnetPermanentViaWebpage(5) to saCmMtaCliAccessType (1988)"
+
+        REVISION     "0706010000Z"
+        DESCRIPTION
+            "Added webPage(6) to saCmMtaProvisioningMode (1528)"
+
+        REVISION     "0703150000Z"
+        DESCRIPTION
+            "Added saCmMtaDhcpReleaseOnRngAbort (5501)"
+
+        REVISION     "0610300000Z"
+        DESCRIPTION
+            "Added saCmMtaAltCertChain (1076,5372)"
+
+        REVISION     "0610020000Z"
+        DESCRIPTION
+            "Changed description of saCmMtaCliAccessPassword"
+
+        REVISION     "0609050000Z"
+        DESCRIPTION
+            "Changed description and defval of saCmMtaProvSnmpInformCommunityString"
+
+        REVISION     "0607110000Z"
+        DESCRIPTION
+            "Added values 4 and 5 to saCmMtaProvisioningMode (786)"
+
+        REVISION     "0606210000Z"
+        DESCRIPTION
+            "Changed saCmMtaSpinLockInit access to read-only
+             Changed description of saCmMtaCliAccessType
+                     to remove VSIFs 105 to 108"
+
+        REVISION     "0603170000Z"
+        DESCRIPTION
+            "Changed saCmMtaTelnetAccess status to obsolete
+             Added saCmMtaCliAccess tree"
+
+        REVISION     "0602130000Z"
+        DESCRIPTION
+            "Added enableSsh(2) to saCmMtaTelnetAccess"
+
+        REVISION     "0601230000Z" -- 2006/01/23
+        DESCRIPTION
+            "Added saCmMtaSpinLockInit"
+
+        REVISION     "0601200000Z" -- 2006/01/20
+        DESCRIPTION
+            "Added saCmMtaSwUpgradeControlTimer"
+
+        ::= { saVoip 1 }
+
+saCmMtaDevice OBJECT-TYPE
+    SYNTAX INTEGER {
+          disable(0),
+          enable(1)
+	}
+    MAX-ACCESS 	  read-only
+    STATUS        current
+    DESCRIPTION	
+        "Control embedded MTA. 
+         If disable(0), MTA will not send out DHCP DISCOVER message.
+         If DHCP option 122.1 is missing, MTA is disabled and MIB is set to disable(0).
+         Note:  Equivalent of VSIF 54.
+         Note:  This object can be set via the CM configuration file ONLY."
+    ::= { saCmMta 1 }
+
+saCmMtaCountMtaAsCpe OBJECT-TYPE
+    SYNTAX INTEGER {
+          false(0),
+          true(1)
+        }
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "MTA in Max-Count of CPEs (Max number of CPE
+         in CM config file), default per eDOCSIS spec.
+         This setting is used to control counting MTA in Max-Count of CPEs.
+         0: Do not count MTA as a CPE
+         1: Count MTA as a CPE
+         Note:  Equivalent of VSIF 69
+         Note:  This object can be set via the CM configuration file ONLY."
+    DEFVAL    { 1 }
+    ::= { saCmMta 2 }
+
+saCmMtaIpFilters OBJECT-TYPE
+    SYNTAX INTEGER {
+          perSpec(0),
+          openMta(1)
+        }
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "DOCSIS config file filters (from RFC2669) are normally applied to the MTA and all 
+         CPE interfaces per the eDOCSIS spec. This MIB controls if the filters are applied
+         to the MTA.
+         0: Follow e-docsis spec - apply filters to MTA, Ethernet and USB ports (default)
+         1: Do not apply any filters to the MTA - apply filters only to Ethernet and USB ports  
+            Filters do NOT block traffic to/from the MTA.
+         Note: Equivalent of VSIF 77"
+    DEFVAL    { 0 }
+    ::= { saCmMta 3 }
+
+saCmMtaProvChange OBJECT-TYPE 
+    SYNTAX INTEGER { 
+          none(0), 
+          informTftpFailAndOid(1) 
+        } 
+    MAX-ACCESS    read-only 
+    STATUS        current 
+    DESCRIPTION 
+        "Applying special requirement of inform to be sent. 
+         0: Follow PacketCable Provision procedure.(default) 
+         1: An inform to be sent after TFTP file download fails, and before returning to MTA-1. 
+            The format for this message is the same as MTA-25 and returns ProvisionStatus 3 indicating failure. 
+            And the OID returned in MTA-25 is changed to the following: 
+            1.3.6.1.4.1.4491.2.2.1.1.1.9 
+         Note:  Mib also controlled by VSIF 73
+         Note:  This object can be set via the CM configuration file ONLY."
+    DEFVAL    { 0 } 
+    ::= { saCmMta 4 } 
+
+saCmMtaSidCount OBJECT-TYPE
+    SYNTAX INTEGER (4|16)
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Number of SIDs the MTA supports."
+    ::= { saCmMta 5 }
+
+saCmMtaProvSnmpSetTimeout OBJECT-TYPE 
+    SYNTAX INTEGER (0..30) 
+    UNITS           "seconds"
+    MAX-ACCESS    read-only 
+    STATUS        current 
+    DESCRIPTION 
+        "Time to wait (in seconds) since last SNMP SET from the SNMP trap server to resend
+         the MTA config file before restarting MTA provisioning.
+         SNMP SET message must contain parameters: configuration file hash, configuration file 
+         URL and, optionally, configuration file encryption key. There are three cases:
+         1.a. For provisioning mode 0 (PacketCable): if hash and key and URL are given,
+              the MTA will continue without waiting.
+           b. For provisioning mode > 0: if URL is given, the MTA will continue without waiting.
+         2.a. For provisioning mode 0: if configuration file hash or URL (or both)
+              is missing, MTA will wait x seconds for the next SET and restart provisioning process.
+           b. For provisioning mode > 0: if URL is missing, MTA will wait x seconds for the next SET
+              and restart provisioning process.
+         3. Only for provisioing mode 0: if key is missing, MTA will wait x seconds for the next SET
+            and then it will continue provisioning.
+         where x is this MIB object.
+         Setting this parameter to 0 means that MTA will never wait for another SET. For case 2
+         it will restart provisioning, for case 3 it will continue provisioning wihout key.
+         Note:  This object can be set via the CM configuration file ONLY."
+    DEFVAL    { 5 } 
+    ::= { saCmMta 6 }
+
+saCmMtaProvisioningMode OBJECT-TYPE
+    SYNTAX INTEGER {
+          packetCable(0),
+          oneConfigFile(1),
+          twoConfigFilesDHCP(2),
+          twoConfigFilesSNMP(3),
+          twoConfigFilesDHCPmacAddress(4),
+          twoConfigFilesMacAddressOnly(5),
+          webPage(6)
+          }
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "This object must only be set via the CM configuration
+         file during the provisioning process.
+         After CM is operational, this object can not be set
+         via SNMP.
+         MTA provisioning modes:
+         0: MTA follows the PacketCable provisioning specifications
+            and supports BASIC, HYBRID and SECURE flows.
+         1: MTA will provision using only the CM config file. VoIP
+            parameters MUST be included in the CM config file as
+            VSIFs. This option will become obsolete.
+         2: MTA will learn the MTA config file name and location
+            from the MTA DHCP OFFER.
+            If the filename or location is missing, MTA will switch
+            to mode 3.
+         3: MTA will learn the MTA config file name and location via
+            SNMP.  The MTA will send an SNMP inform to the
+            provisioning server specified in DHCP option 122.3 or
+            177.3, depending on saCmMtaDhcpPktcOption (note: MTA
+            will not provision if saCmMtaDhcpPktcOption = requireNone(1)
+            and no option 122.3 or 177.3 is specified).
+         4: MTA will learn the MTA config file name and location and
+            the MTA host name from the MTA DHCP OFFER/ACK.
+            If the filename is missing in the DHCP OFFER/ACK, the MTA
+            will request a config file name based on the MTA mac
+            address (example: 000f21c4e145.bin).
+            If the MTA host name is missing in the DHCP OFFER/ACK the
+            MTA will use a host name of MAC_ADDR (example: 000f21c4e145).
+         5: MTA will request a config file name based on the MTA mac
+            address (example: 000f21c4e145.bin).  
+            MTA will learn the MTA config file location via DHCP.  
+            MTA will use a host name of MAC_ADDR (example: 000f21c4e145).  
+            MTA will NOT use the file name and host name in the
+            DHCP ACK even if the parameters are present.
+         6: Web page provisioning. Parameters from a web page will be used
+            rather than from config file. All the web page parameters are
+            stored in non-vol. Base provisioning method is 2 above.
+         For modes other than 0, MTA DHCP options 122, 177 are not required.
+         Note:  This object can be set via the CM configuration file ONLY."
+    DEFVAL    { 0 }
+    ::= { saCmMta 7 }
+
+saCmMtaDhcpPktcOption OBJECT-TYPE
+    SYNTAX INTEGER {
+          require122(0),
+          requireNone(1),
+          require177(2)
+          }
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "This object must only be set via the CM configuration file during the provisioning process.
+         After CM is operational, this object can not be set via SNMP.
+         0: CM and MTA will accept only PacketCable option 122. If option 122 is not included
+            in CM DHCP OFFER, MTA will not start.
+         1: CM and MTA will accept 122 or 177 or none. If DHCP OFFER contains 122 or 177, MTA
+            will process it.
+         2: CM and MTA will accept only PacketCable option 177. If option 177 is not included
+            in CM DHCP OFFER, MTA will not start.
+         This MIB is saved into modem's non-vol memory and the new value is active after
+         the modem registers and reboots again (DHCP comes before config file parsing).
+         Note:  Equivalent of VSIF 64
+         Note:  This object can be set via the CM configuration file ONLY."
+    DEFVAL    { 0 }
+    ::= { saCmMta 8 }
+
+saCmMtaProvSnmpInformCommunityString OBJECT-TYPE 
+    SYNTAX SnmpAdminString
+    MAX-ACCESS    read-only 
+    STATUS        current 
+    DESCRIPTION 
+        "The value set in this object becomes the SNMPv2c community string in all SNMP INFORMS
+         sent to the provisioning server during MTA registration.
+         Provisioning methods affected include: 
+         - SA ProvMode 3
+         - Pktc BASIC.2 (MTA-25 only)
+         - Pktc HYBRID.1 (MTA-15 only)
+         - Pktc HYBRID.2 (MTA-15 and MTA-25)
+        Note: Pktc SECURE mode is NOT affected.
+        Note: This setting only affects provisioning-related INFORMs, not INFORMs/TRAPs sent by
+              the MTA after it has completed registration.
+        Note: This object can be set via the CM configuration file ONLY."
+    DEFVAL  { "public" } 
+    ::= { saCmMta 9 }
+
+saCmMtaRequireTod OBJECT-TYPE
+    SYNTAX INTEGER {
+          false(0),
+          true(1)
+         }
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+              "This object controls if the EMTA will continue the provisioning
+               process if a response from a Time of Day server is not available
+               at provisioning step CM-8. If set to true(1) the EMTA will require
+               a ToD response. If set to false(0) the EMTA will request ToD but
+               will not require the TOD server response.
+               Note: For PacketCable secure provisioning, if this object is
+               set to false(0), and ToD is not available, MTA will probably
+               be unable to verify that certificates are valid and will not provision.
+               Note: this object can be set in the CM config file only."
+    DEFVAL    { 1 }
+    ::= { saCmMta 10 }
+
+saCmMtaTelnetAccess OBJECT-TYPE
+    SYNTAX INTEGER {
+          disable(0),
+          enableTelnet(1),
+          enableSsh(2)
+    }
+    MAX-ACCESS       read-write
+    STATUS        obsolete
+    DESCRIPTION    
+        "Controls telnet/SSH access to the CM IP Address when VSIF 106
+         is configured for SNMP-controlled conditional telnet access
+         (VSIF 106 = 2).
+
+         When VSIF 106 = 2 AND username and password are specified
+         in VSIFs 107 and 108, the value of this object can be modified
+         to control telnet/SSH access. In this case, the object returns
+         the current value when read (disable(0) by default).
+
+         When VSIF 106 = 1 AND username and password are specified
+         in VSIFs 107 and 108, this object returns 1 when read and
+         cannot be modified.
+
+         When VSIF 106 = 0 or username or password are not specified,
+         this object returns 0 when read and cannot be modified."
+    ::= { saCmMta 11 }
+
+saCmMtaMtaCpeTraffic OBJECT-TYPE
+    SYNTAX INTEGER {
+          pass(1),
+          block(2)
+         }
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+              "This object controls if the traffic between eMTA and CPE
+               can be forwarded."
+    DEFVAL    { 1 }
+    ::= { saCmMta 12 }
+
+saCmMtaDecryptMtaConfigFile OBJECT-TYPE 
+    SYNTAX INTEGER { 
+        disable(1), 
+        RSA-CM-cert(2) 
+        } 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION 
+        "To be written." 
+    DEFVAL { 1 } 
+    ::= { saCmMta 13 } 
+
+saCmMtaSwUpgradeControlTimer OBJECT-TYPE
+        SYNTAX INTEGER (0..7200)
+        UNITS         "seconds"
+        MAX-ACCESS       read-write
+        STATUS    current
+        DESCRIPTION       
+            "This object is used to control the conditions for rebooting
+             the modem following a software download:
+             0: Docsis Default: Always download software and reboot
+                immediately after software download,
+             1: Do not download software if any phone endpoint is off hook
+                and return 13 to docsDevSwAdminStatus when set to
+                upgradgeFromMgt(1),
+             other: Download software immediately but delay the reboot
+                    until all lines have been on-hook for the specified
+                    time in seconds.
+             Note: docsDevSwOperStatus shows inProgess(1) even if the
+                   download itself has finished and MTA is waiting for user
+                   to hang up."
+        DEFVAL { 0 }
+        ::= { saCmMta 14 }   
+
+saCmMtaSpinLockInit OBJECT-TYPE
+    SYNTAX INTEGER {
+        zero(0),
+        random(1)
+        }
+    MAX-ACCESS       read-only
+    STATUS        current
+    DESCRIPTION    
+        "Controls whether the usmUserSpinLock from SNMPv3 USM is initially 
+         set to zero or to a random value at boot time."
+    DEFVAL { 1 }
+    ::= { saCmMta 15 }
+
+saCmMtaAltCertChain OBJECT-TYPE
+    SYNTAX INTEGER {
+        deny(0),
+        accept(1)
+        }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION    
+        "Normally, an image built for PacketCable may only use the CableLabs
+         service provider certificate chain, and an image built for
+         EuroPacketCable may only use the tComLabs service provider
+         certificate chain. This object allows the two certificate chains to
+         be used regardless of whether the image supports PacketCable or
+         EuroPacketCable.
+         0: Follow the Security Specification. PacketCable images use
+            Cablelabs certificate chain. EuroPacketCable images use tComlabs
+            certificate chain.
+         1: Don't tie the Service Provider certificate chain with the image."
+    DEFVAL { 0 }
+    ::= { saCmMta 16 }
+
+saCmMtaDhcpReleaseOnRngAbort OBJECT-TYPE
+    SYNTAX INTEGER {
+        perSpec(0),
+        noDhcpRelease(1)
+        }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION    
+        "This MIB allows the operator to set the MTA not to send DHCP release
+         after T4StationMainEvent/RangeAbort  messge from CMTS. 
+         When the value is set to 0, the MTA will follow RFC2131 and send DHCP
+         release.
+         When the value is set to 1, the MTA will not send any DHCP release if
+         EMTA receives T4StationMainEvent/RangeAbort from CMTS
+         This MIB should be set in the CM config file."
+         DEFVAL { 0 }
+    ::= { saCmMta 17 }
+
+saCmMtaIcmpReplyEnable OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This object allows the operator to set the MTA IP stack to stop replying with the
+         ICMP port destination unreachable messages during MTA initialization.
+         When the MTA is online, it always responds with ICMP, if necessary."
+    DEFVAL { true }
+    ::= { saCmMta 18 }
+
+saCmMtaDhcpRebindRule OBJECT-TYPE
+    SYNTAX INTEGER{
+        strict(1),
+        relaxed(2)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This object is used to control the DHCP client behaviour
+         for the MTA when a DHCP REBIND (T2 timeout)
+         occurs. The value strict will only allow the MTA to accept
+         a valid DHCP ACK only from the DHCP server 
+         that provided the initial lease. The value relaxed will
+         allow the MTA to accept a valid DHCP ACK from any DHCP server."
+    REFERENCE
+        "RFC 2131 Dynamic Host Configuration Protocol"
+    DEFVAL { relaxed }
+    ::= { saCmMta 19  }
+
+saCmMtaDhcpOptionSixty OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current 
+    DESCRIPTION 
+        "Defines the string value for SIP EMTA DHCP DISCOVER option 60 text. 
+         This mib is only writeable in the the CM config file. Default option
+         60 value is pktc1.0" 
+    DEFVAL { "pktc1.0" }
+    ::= { saCmMta 20 }
+
+saCmMtaProvState OBJECT-TYPE
+    SYNTAX  INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This MIB will show the provisioning state of the modem. This is equivalent to 
+          the CM State web page. This MIB will return an integer of the current 
+          provisioning state based on the descriptions below. 
+          MTA Disabled / Prevented would be the value if MTA is diabled 
+          (via option 122/177, ifAdminStatus, saCmMtaDevice) or prevented 
+          (application not started due to bad option 122 or other error).
+                                        Docsis-Downstream Scanning (1) 
+                                        Docsis-Downstream Ranging (2) 
+                                        Docsis-Upstream Ranging (3) 
+                                        Docsis-DHCP (4) 
+                                        Docsis-TFTP (5) 
+                                        Docsis-Data Reg Complete (6) 
+                                        Telephony-DHCP (7) 
+                                        Telephony-Security (8)
+                                        Telephony-TFTP (9) 
+                                        Telephony-Reg with Call Server (10) 
+                                        Telephony-Reg Complete (11)
+                                        MTA Disabled/Prevented (12) "
+    ::= { saCmMta 21 }    
+    
+
+saCmMtaPingTestInterval OBJECT-TYPE
+    SYNTAX 	INTEGER ( 0..1440)
+    MAX-ACCESS read-write
+    STATUS current 
+    DESCRIPTION 
+        "Defines the interval value for the pings test from the MTA stack to the default gateway (time in minutes - default set to 15, 0 disables this feature). This value is stored in the non-vol"
+    DEFVAL { 15 }
+
+    ::= { saCmMta 22 }
+
+saCmMtaPingTestFailEMTAThreshold OBJECT-TYPE
+    SYNTAX 	INTEGER
+    MAX-ACCESS read-write
+    STATUS current 
+    DESCRIPTION 
+        "The number of consecutive failed ping tests to trigger a MTA only reboot (number - default set to 0 (disabled)" 
+    DEFVAL { 0 }
+
+    ::= { saCmMta 23 }
+
+saCmMtaPingTestFailCMThreshold OBJECT-TYPE
+    SYNTAX 	INTEGER
+    MAX-ACCESS read-write
+    STATUS current 
+    DESCRIPTION 
+        "The number of consecutive failed ping tests to trigger a CM and  MTA  reboot (number - default set to 0 (disabled)" 
+    DEFVAL { 0 }
+
+    ::= { saCmMta 24 }
+    
+ saCmMtaEngineBoots OBJECT-TYPE
+    SYNTAX            TruthValue
+    MAX-ACCESS read-write
+    STATUS current 
+    DESCRIPTION 
+      "This MIB controls the SNMPv3EngineBoots parameter. This parameter is used in full secure packetcable provisioning  with the SNMPset for the MTA config file.
+      1 is current default behavior (SNMPv3EngineBoots resets to 0 on a factory reset)
+      2 will allow the value of SNMPv3EngineBoots to persist through factory resets " 
+    DEFVAL { 1 }
+
+    ::= { saCmMta 25 }      
+    
+saCmMtaProvSnmpSetCommunityString OBJECT-TYPE 
+    SYNTAX SnmpAdminString
+    MAX-ACCESS    read-only 
+    STATUS        current 
+    DESCRIPTION 
+        "The value set in this object becomes the SNMPv2c community string that will be accepted
+         in the SNMPSET sent from the provisioning server during MTA registration.
+         Provisioning methods affected include: 
+         - Pktc HYBRID.1 (MTA-19 only)
+         - Pktc HYBRID.2 (MTA-19 only)
+        Note: Pktc SECURE mode is NOT affected.
+        Note: This setting only affects provisioning-related SNMPSET, not SNMPSET sent by
+              the prov server to the MTA after it has completed registration.
+        Note: This object can be set via the CM configuration file ONLY."
+    DEFVAL  { "public" } 
+    ::= { saCmMta 26 }
+
+
+-- ===========
+-- TELNET TREE
+
+saCmMtaCliAccess OBJECT IDENTIFIER ::= { saCmMta 1001 }
+
+saCmMtaCliAccessType OBJECT-TYPE
+    SYNTAX INTEGER {
+          disable(0),
+          enableTelnetPermanent(1),
+          enableTelnetSingleSession(2),
+          enableSshPermanent(3),
+          enableSshSingleSession(4),
+          enableTelnetPermanentViaWebpage(5)
+          }
+    MAX-ACCESS       read-write
+    STATUS        current
+    DESCRIPTION    
+        "Controls telnet/SSH access to the CM IP Address.
+          
+         When username and password are specified, the value of this
+         object can be modified to control telnet/SSH access. In this
+         case, the object returns the current value when read
+         (disable(0) by default).
+
+         Single session enables the session and once a user logs out,
+         the access gets disabled. Permanent session does not disable
+         the access after a user logs out.
+         
+         * Note: Option 5 enableTelnetPermanentViaWebpage(5) is only 
+         available in legacy D2.0 modem software. It has been deprecated 
+         in Docsis 3.0 and Docsis 2.0 R2 modem software. In these models 
+         it will return an error if set."
+    DEFVAL { 0 }
+    ::= { saCmMtaCliAccess 1 }
+
+saCmMtaCliAccessInterface OBJECT-TYPE
+    SYNTAX      BITS {
+                docsis(0),
+                emta(1),
+                cpe(2)
+    }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Controls and reflects the IP stack interfaces on which a telnet server
+         is active."
+    DEFVAL { '00'h }
+    ::= { saCmMtaCliAccess 2 }
+
+saCmMtaCliAccessUsername OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Username string"
+    ::= { saCmMtaCliAccess 3 }
+
+saCmMtaCliAccessPassword OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Password string. When using a plain-text string, this object is encoded
+         as an ascii string.  When using the MD5 or password of the day types,
+         this object should be encoded as a hex string."
+    ::= { saCmMtaCliAccess 4 }
+
+saCmMtaCliAccessPasswordType OBJECT-TYPE
+    SYNTAX INTEGER {
+        plain(0),
+        md5(1),
+        pod(2)
+    }
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Password type"
+    DEFVAL { 0 }
+    ::= { saCmMtaCliAccess 5 }
+
+saCmMtaCliAccessSessionInProgress OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates whether or not a telnet session is currently in progress."
+    ::= { saCmMtaCliAccess 6 }
+
+saCmMtaCliAccessForceUserLogout OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "If a telnet session is currently in progress, setting this object
+         to true(1) will terminate the session.  Setting to false(2) has
+         no effect.  Always returns false(2) when read."
+    ::= { saCmMtaCliAccess 7 }
+
+saCmMtaCliAccessSessionAddress OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object gives the address of the most recently connected device.  
+         If no session has taken place since the last reboot, this object will 
+         report an empty string."
+    ::= { saCmMtaCliAccess 8 }
+
+saCmMtaCliAccessBadAddress OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The address of an device which has last unsuccessfully attempted to log in 
+         to this station."
+    ::= { saCmMtaCliAccess 9 }
+
+
+saCmMtaCliAccessTriesToLock OBJECT-TYPE
+    SYNTAX      INTEGER (0..32)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Defines number of unsuccessful access atempts before disconneting
+         the session. Access is blocked for duration specified in
+         saCmMtaCliAccessUnlockTime.
+         If 0 is specified, session is never dropped."
+    DEFVAL { 3 }
+    ::= { saCmMtaCliAccess 10 }
+
+saCmMtaCliAccessUnlockTime OBJECT-TYPE
+    SYNTAX  INTEGER
+    UNITS "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Time to unlock the access. If 0 is specified only reboot unlocks
+         the access."
+    DEFVAL { 30 }
+    ::= { saCmMtaCliAccess 11 }
+
+saCmMtaCliAccessNoActivityTimeout OBJECT-TYPE
+    SYNTAX  INTEGER
+    UNITS "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Timeout for a session if no activity (no input) is present.
+         If 0, session will not timeout."
+    DEFVAL { 0 }
+    ::= { saCmMtaCliAccess 12 }
+
+saCmMtaCliAccessConnectBanner OBJECT-TYPE
+    SYNTAX  SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Banner when user connects to session."
+    ::= { saCmMtaCliAccess 13 }
+
+saCmMtaCliAccessGoodLogin OBJECT-TYPE
+    SYNTAX  SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Banner when user successfully logs in."
+    ::= { saCmMtaCliAccess 14 }
+
+saCmMtaCliAccessBadBanner OBJECT-TYPE
+    SYNTAX  SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Banner when user is disconnected after trying loging in with
+         bad credentials."
+    ::= { saCmMtaCliAccess 15 }
+
+-- END OF TELNET TREE  
+
+-- ====================
+-- GRACEFUL RELOAD TREE
+-- ====================
+
+saCmMtaGracefulReload OBJECT IDENTIFIER ::= { saCmMta 1002 }
+
+saCmMtaGracefulReloadAdminStatus OBJECT-TYPE
+	SYNTAX INTEGER {
+		idle(0),
+		start(1),
+		cancel(2),
+		waitForTimeout(3),
+		stopByTrafficActivity(4),
+		stopByMTALineActivity(5)
+	}
+	MAX-ACCESS	read-write
+	STATUS		current
+	DESCRIPTION
+			"Graceful reload feature.
+			 A technician can use this MIB object to let the modem reset when it detectes no user activity.
+			 There are 2 possible values can be used when set:
+			 start(1)  - to start the timer. After the timer timeout, the modem may reload.
+			 cancel(2) - to cancel the request.
+			 There are 4 possible status when read:
+			 idle(0) - the modem does not receive the graceful reload request or is cancelled by the technician.
+			 waitForTimeout(3)        - the modem received a request and the timer is countdown.
+			 stopByTrafficActivity(4) - the timer is timeout but the modem can not reload dut to data activity for CPEs.
+			 stopByMTALineActivity(5) - the timer is timeout but the modem can not reload dut to EMTA Line activity."
+	DEFVAL {0}
+        ::= { saCmMtaGracefulReload 1 }
+
+saCmMtaGracefulReloadTimer OBJECT-TYPE
+    SYNTAX INTEGER (1..64000)
+    UNITS           "minutes"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "When saCmMtaGracefulReloadAdminStatus is set to start(1), this timer is triggered. 
+         After timer expires, modem will be reloaded only when both lines are in onhook state 
+         and the ETH throughput is lower than saCmMtaGracefulReloadThroughput"
+    DEFVAL { 15 }
+        ::= { saCmMtaGracefulReload 2 }
+
+saCmMtaGracefulReloadThroughput OBJECT-TYPE
+    SYNTAX INTEGER (0..64000)
+    UNITS       "kbps"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "When saCmMtaGracefulReloadAdminStatus is set to start(1), this timer is triggered. 
+        After timer expires, modem will be reloaded only when both lines are in onhook state 
+        and the ETH throughput is lower than saCmMtaGracefulReloadThroughput"
+    DEFVAL { 100 }
+        ::= { saCmMtaGracefulReload 3 }
+
+saCmMtaGracefulReloadRuns OBJECT-TYPE
+    SYNTAX INTEGER (1..32)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+ 	  "This MIB object defines how many times the graceful reload procedure is executed consecutively.
+ 	   The timer should reset to its set value once graceful reload procedure has occurred."
+	DEFVAL { 1 }
+        ::= { saCmMtaGracefulReload 4 }
+
+-- END OF GRACEFUL RELOAD TREE
+
+END

@@ -1,0 +1,9 @@
+root_dir: /tftpboot
+shared_secret: key
+
+# supported: mysql, postgres, sqlite3
+db_driver: postgres
+db_dsn: "postgres://user:pass@localhost/db?sslmode=disable"
+#db_dsn: "/etc/db.sqlite3"
+#db_dsn: "user:pass@tcp(127.0.0.1:3306)/db"
+

@@ -1,0 +1,5 @@
+config_type = "text"
+
+fmt = import("fmt")
+
+fmt.Println("test")

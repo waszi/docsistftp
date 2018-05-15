@@ -1,0 +1,2186 @@
+--**************************************************************************
+--                                                                          
+--    Copyright 2010 Scientific Atlanta, A Cisco Company                                   
+--    All Rights Reserved                                                   
+--    No portions of this material may be reproduced in any
+--    form without the written permission of:                                                
+--             Scientific Atlanta, A Cisco Company                                          
+--             5030 Sugarloaf Pkwy                                     
+--             Lawrenceville, Georgia 30044                                    
+--                                                                          
+--**************************************************************************
+
+SA-MTA-MIB DEFINITIONS ::= BEGIN
+IMPORTS
+        MODULE-IDENTITY, 
+        OBJECT-TYPE,
+        enterprises, 
+        Integer32,
+        Unsigned32
+                FROM SNMPv2-SMI
+        ifIndex
+                FROM IF-MIB
+        SnmpAdminString 
+                FROM SNMP-FRAMEWORK-MIB
+        TruthValue,
+        DateAndTime
+                FROM SNMPv2-TC ;
+                
+sa           OBJECT IDENTIFIER ::= { enterprises 1429 }
+saVoip       OBJECT IDENTIFIER ::= { sa 78 }
+
+saMta   MODULE-IDENTITY
+        LAST-UPDATED    "2013050900000Z"
+        ORGANIZATION    "Cisco Inc."
+        CONTACT-INFO    "vveeraga@cisco.com"
+        DESCRIPTION
+            "saMtaDevLCSSignalingSupport controls the LCS Signaling."
+
+        -- History
+        REVISION "2013050900000Z"
+        DESCRIPTION
+            "Updated saMtaDevJitTarget and saMtaDevJitDataMaxLen descriptions to more accurately reflect their behavior"
+
+		REVISION "201211300000Z"
+        DESCRIPTION
+        	"Added saMtaDevSignalingPlayZeroDurationPkt"
+        
+		REVISION "201102220000Z"
+        DESCRIPTION
+        	"Updated default value of saMtaDevResetCleanupTimeout from 0 to 1 minute"
+        	
+        REVISION "201102140000Z"
+        DESCRIPTION
+        	" Modified saMtaDevLCSSignalingSupport MIB description"
+        	
+        REVISION "201101240000z"
+        DESCRIPTION
+        	" Added saMtaDevLCSSignalingSupport"
+        	
+	REVISION "201101140000Z"
+        DESCRIPTION
+        	" Added saMtaDnsBaseTimeout - CR17582 "
+			
+		REVISION "201009130000Z"
+        DESCRIPTION
+        	" Added saMtaDevDTMFRelayPayloadType"
+
+        REVISION "201004300000Z"
+        DESCRIPTION
+        	" Fixed compilation errors-FEMFMode object"
+
+        REVISION "201004220000Z"
+        DESCRIPTION
+        	" Updated Copyright and dates"
+
+        REVISION "201001140000Z"
+        DESCRIPTION
+        	" Added countryCode values
+        		netherlands2(30) (CR15565)"
+
+
+        REVISION "200912010000Z"
+        DESCRIPTION
+        	" Added countryCode values
+        		argentina(24),
+        		columbia(25),
+        		romania(26),
+       			singapore(27),
+       			columbia2(28)  (CR4465),
+       			chile2(29) (CR15140)"
+        
+        REVISION "200908260000Z"
+        DESCRIPTION 
+        	" Added saMtaDevSdpSuppression"
+        
+        REVISION "200908130000Z"
+        DESCRIPTION 
+        	" Added saMtaDevOSITimerInterval"
+        
+        REVISION    "200906170000Z"
+        DESCRIPTION 
+        	"Added saMtaTestFEMFOnBoot and saMtaTestFEMFMode
+        	Flipped the description for saMtaTestFEMFMode"
+        
+        REVISION     "200903090000Z"
+        DESCRIPTION
+            "Added value 0 (notApplicable) to saMtaEndPntStatePhysical (3590)
+            Updated behavior of saMtaDevAutoSendOSI when switch sends OSI (3500)"
+              
+        REVISION	"200902230000Z"
+        DESCRIPTION         
+        	"Added saMtaDevIgnoreRtpMap - CR3511
+        	 Added saMtaDevSlicVoltageBoost(53) - CR3359"
+        	
+        REVISION     "200805270000Z"
+        DESCRIPTION
+            "Added saMtaEndPntCtrlCustomCWCIDCfg 
+    		 Added saMtaEndPntCtrlCASLevelCfg
+    		 Added saMtaEndPntCtrlOffhookCIDFSKLevelCfg (2473,5696)
+    		 Added Australia country code value for saMtaDevCountryCode (2340),
+    		 Added noNameField(2) value to saMtaDevCidNameLength object(2392,2267)"    		  	 
+
+        REVISION     "200804230000Z"
+        DESCRIPTION
+            "Added advertiseCsuitesOnly(2) to saMtaDevMediaSecurityAdvertise (2093)"
+
+        REVISION     "200801180000Z"
+        DESCRIPTION
+            "Added saMtaDevTddDetection (1912)
+             Added saMtaDevLcoTosOverride (1913)
+             Added saMtaEndPntQuarantineState (2218)
+             Added saMtaDevMaintenance (2215)
+             Added advertiseCsuitesOnly(2) to saMtaDevMediaSecurityAdvertise (2093)"
+
+        REVISION     "200711160000Z"
+        DESCRIPTION
+            "Changed description for saMtaDevAutoSendOSI
+             Changed DEFVAL for saMtaDevQuarantineQueueDepth
+             Changed DEFVAL for saMtaDevExitRsipDisconnectState (1519)"
+
+        REVISION     "200708140000Z"
+        DESCRIPTION
+            "Added saMtaDevCidConvertPlus (1635)
+             Changed description and DEFVAL for saMtaDevExitRsipDisconnectState (1519)"
+
+        REVISION     "200706210000Z"
+        DESCRIPTION
+            "Added saMtaDevReversePolarityEnable (1568)
+             Added saMtaDevDsaPollJitter (1569)"
+
+        REVISION     "200705290000Z"
+        DESCRIPTION
+            "Added saMtaDevQuarantineQueueDepth (1498)
+             Added saMtaDevNotificationMode (1499)"
+
+        REVISION     "200704050000Z"
+        DESCRIPTION
+            "Added saMtaDevCidNameLength (1385)"
+
+        REVISION     "200703150000Z"
+        DESCRIPTION
+            "Changed saMtaDevEcanTailLength to obsolete (1281)
+             Changed saMtaDevRsipDisconnectTimer to
+                     saMtaDevExitRsipDisconnectState (5505)"
+
+        REVISION     "200701240000Z"
+        DESCRIPTION
+            "Changed saMtaDevLoopVoltageMaintain (1209)
+             Added saMtaDevLoopVoltageMaintainTimer (1209)
+             Corrected startForeignElectromotiveForceTest (remove extra start)"
+
+        REVISION     "200701120000Z"
+        DESCRIPTION
+            "Added saMtaEndPntLedVmwiBehavior (1198)"
+
+        REVISION     "200611170000Z"
+        DESCRIPTION
+            "Added hungary2 to saMtaDevCountryCode (967)"
+
+        REVISION     "200609280000Z"
+        DESCRIPTION
+            "Added saMtaDevSnmpTosValue (962)
+             Changed description of saMtaDevPulseMetering"
+
+        REVISION     "200609130000Z"
+        DESCRIPTION
+            "Added saMtaDevEmbeddedRequestTO (777)"
+
+        REVISION     "200608110000Z"
+        DESCRIPTION
+            "Corrected startForceTestExecution bit in
+                       saMtaTestEndPntDiagTestsStart
+             Added saMtaDevCidMissingSigTime (851,5191)
+             Added saMtaDevDhcpNak (846,5192)
+             Added saMtaDevCidNameChange (802)
+             Added saMtaDevEndofDigitString (776)"
+
+        REVISION     "200607110000Z"
+        DESCRIPTION
+            "Added saMtaDevEcanTailLength (785)"
+
+        REVISION     "200606220000Z"
+        DESCRIPTION
+            "Added saMtaDevLogPageSigEntriesLimit (741)"
+
+        REVISION     "200605100000Z"
+        DESCRIPTION
+            "Added saMtaDevNcsKparam (5107)
+             Added hongkong(21) to saMtaDevCountryCode (5056)
+             Changed name saMtaDevAutoDetectOSI to saMtaDevAutoSendOSI
+             Changed description of saMtaDevBell103Ntfy
+             Changed description of saMtaDevRingVoltageOffset"
+
+        REVISION     "200604190000Z"
+        DESCRIPTION
+            "Moved saMtaEndPntConnectionCleanupTimeout
+                to saMtaDevConnectionCleanupTimeout
+             Added saMtaEndPntCtrlAlarmPanelAndPosTerminalDetection (5083)"
+
+        REVISION     "200603300000Z"
+        DESCRIPTION
+            "Added saMtaDevBell103Ntfy
+             Added saMtaDevAutodetectOSI
+             Added saMtaEndPntQuarantineEvents"
+
+        REVISION     "200602100000Z"
+        DESCRIPTION
+            "Replaced saMtaTestMltTable with saMtaTestEndPntTable
+             Added saMtaDevCmsRedirect
+             Added saMtaDevRsipDisconnectTimer"
+
+        REVISION     "200601260000Z"
+        DESCRIPTION
+            "Added india(20) to saMtaDevCountryCode
+             Added saMtaDev2833KeepAlive
+             Added saMtaDevNegotiateSingleCodec
+             Changed saMtaDevG711Mode status to obsolete
+             Changed saMtaDevJitCommitSetting status to obsolete
+             Added inCallVoice(3), inCallData(4) to
+                   saMtaEndPntStateLogical
+             Added saMtaDevJitVoiceType
+             Added saMtaDevJitDataMaxLen
+             Added saMtaDevResetCleanupTimeout
+             Added saMtaEndPntConnectionCleanupTimeout"
+
+        REVISION     "200511280000Z"
+        DESCRIPTION
+            "Added mexico(18) and czech(19) to saMtaDevCountryCode
+             Removed default values for min/max hookflash and gain"
+
+        ::= { saVoip 3 }
+
+-- MTA Device
+saMtaDevice   OBJECT IDENTIFIER ::=  { saMta 1 }
+
+saMtaDevCmsVendor OBJECT-TYPE
+    SYNTAX INTEGER {
+        broadcom(1),
+        sonus(2),
+        tollBridge(3),
+        syndeo(4),
+        standardPacketCable(5),
+        commatch(6),
+        generalBandwidth(7),
+        nueraV52(8),
+        nueraGr303(9)
+    }
+    MAX-ACCESS 	  read-only
+    STATUS        current
+    DESCRIPTION	
+        "Call Agent Vendor.
+         1:  Broadcom simple call agent or generic NCS call agent
+         2:  Sonus
+         3:  TollBridge
+         4:  Syndeo
+         5:  Standard PacketCable Call Agent (Default)
+         6:  Commatch
+         7:  General Bandwidth
+         8:  Nuera v5.2 gateway Call Agent
+         9:  Nuera GR303 gateway Call Agent
+         Note:  Similar to vendor specific DOCSIS TLV 24."
+    DEFVAL { 5 }
+    ::= { saMtaDevice 1 }
+
+saMtaDevDynamicSfDirection  OBJECT-TYPE
+    SYNTAX INTEGER {
+        both(0),
+        none(1),
+        onlyUpstream(2)
+    }
+    MAX-ACCESS 	  read-write
+    STATUS        current
+    DESCRIPTION	
+        "This setting controls the DQOS mode used for RTP/RTCP voice traffic.
+         0 (default value): Use DQoS for both upstream and downstream.
+         1: Use Best Effort service for both upstream and downstream
+         2: Use DQoS for upstream traffic, use Best Effort for downstream traffic
+         Note:  Equivalent of VSIF 26."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 2 }
+
+saMtaDevAllowBe OBJECT-TYPE
+    SYNTAX INTEGER {
+          false(0),
+          true(1)
+    }
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+           "Primary SF usage if dynamic SF fails:
+            0: do no switch to primary SF if dynamic SF fails.
+            1: allow to switch to primary SF.
+            Equivalent of VSIF 74."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 3 }
+
+saMtaDevPhsMode OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1),
+        onlyUpstream(2),
+        onlyDownstream(3)
+    }
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "Enable Payload Header Suppression for upstream RTP traffic.
+         0: Disable (Default)
+         1: Enable
+         2: Only in the upstream direction
+         3: Only in the downstream direction
+         Note:  PHS is not supported by all CMTS vendors
+         Note:  Equivalent of VSIF 29."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 4 }
+
+saMtaDevG711Mode OBJECT-TYPE
+    SYNTAX INTEGER {
+        pcmU(0),
+        pcmA(1)
+    }
+    MAX-ACCESS    read-only
+    STATUS        obsolete
+    DESCRIPTION
+        "Set which G.711 companding law should be used by default
+         0: PCMU(u-Law)(Default)
+         1: PCMA(a-Law)
+         Note:  Equivalent of VSIF 36.
+         Note:  This object can be set via the MTA configuration file ONLY."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 5 }
+
+saMtaDevMediaSecurityAdvertise OBJECT-TYPE 
+    SYNTAX INTEGER { 
+       disable(0),
+       enable(1),
+       advertiseCsuitesOnly(2)
+       } 
+    MAX-ACCESS    read-write 
+    STATUS        current 
+    DESCRIPTION 
+        "Media security advertisement in OK to CRCX/MDCX. 
+         If disableMediaSecurity, only 60/50, 80/70 (no security) 
+         will be advertised by the MTA. 
+        This setting is used to disable Media Security for voice calls.
+         0: Media Security Advertisement Disabled 
+         1: Media Security Advertisement Enabled (default) 
+         2: Media security disabled, cipher-suites advertised
+         Equivalent of VSIF 63, value 2 is not applicable in
+         VSIF configuration."
+   DEFVAL { 1 }
+    ::= { saMtaDevice 6 }
+
+saMtaDevCountryCode OBJECT-TYPE
+    SYNTAX INTEGER {
+        northAmerica(0),
+        japan(1),
+        uk(2),
+        sweden(3),
+        germany(4),
+        france(5),
+        tr57(6),
+        belgium(7),
+        finland(8),
+        italy(9),
+        etsi(10),
+        netherlands(11),
+        switzerland(12),
+        brazil(13),
+        denmark(14),
+        hungary(15),
+        chile(16),
+        poland(17),
+        mexico(18),
+        czech(19),
+        india(20),
+        hongkong(21),
+        hungary2(22),
+        australia(23), 
+        argentina(24),
+        columbia(25),
+        romania(26),
+        singapore(27),
+        columbia2(28),
+        chile2(29),
+        netherlands2(30) 
+                
+    }
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Set country specific telephone line parameters:
+         Default for DPX MTA is 0
+         Default for EPX MTA is 10
+         Note: Equivalent of VSIF 67.
+         Note: This object can be set via the MTA configuration file ONLY."
+    ::= { saMtaDevice 7 }
+
+saMtaDevRequireGateId OBJECT-TYPE 
+    SYNTAX INTEGER { 
+        true(1), 
+        false(2) 
+    } 
+    MAX-ACCESS    read-only 
+    STATUS        current 
+    DESCRIPTION 
+        "Config Gate-ID usage in DQoS. 
+         1: MTA requires GateID in CRCX/MDCX in order to send DSA-REQ. 
+         2: MTA does not require GateID in CRCX/MDCX in order to send DSA-REQ. 
+            Will use gate-id if it is present , else create the DQoS without the gate-id 
+         Note:  Equivalent of VSIF 71." 
+    ::= { saMtaDevice 8 }
+
+saMtaDevPulseMetering OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "Enables option to send meter pulse on the phone interface when commanded by the NCS call agent.
+         Note: This must also be enabled on the NCS call agent.  
+               Many call agents do not support this functionality."
+    DEFVAL { 1 }
+    ::= { saMtaDevice 9 }
+
+saMtaDevRtcpTosValue OBJECT-TYPE
+    SYNTAX        Integer32 (0..63)
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "This is used to set the value of the upper 6 bits of the diff-serve byte for transmitted RTCP packets
+         To set the diff-serve byte to 0xA0 in outgoing packets, set this field to 0x28
+         EX:     0xA0 = 1010 0000 (binary)
+              => 0x28 = 1010 00 (binary)
+              => 40 (dec)
+         Note:  Equivalent of VSIF 53."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 10 }
+
+saMtaDevUgsKeepAlive OBJECT-TYPE
+    SYNTAX INTEGER {
+        doNothing(0),
+        sendSilentRtp(1),
+        deleteSetupConnection(2),
+        useOneSID(3)
+    }
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "In DOCSIS 1.0+, when a call is put onhold and no traffic is flowing the UGS flows can timeout. 
+         This settings prevents the UGS flow from being deleted by the CMTS upon no activity detection. 
+            EX: - A calls B, conversation 
+                - C calls A, A hears call waiting tone 
+                - A switches to C (by pressing hook flash) 
+                - B is put on hold. The UGS service flow is still active for B 
+                  but no data is flowing. After 300s the CMTS will delete the USG 
+                  and B gets disconnected. 
+         0: do nothing (default)
+         1: send a silent RTP packet periodically
+         2: delete the UGS flow and setup a UGS flow when the call is no longer on hold
+         3: Share the same SID for the upstream SF per endpoint.
+         This feature SHOULD only be used in DOCSIS1.0+ mode
+         Note :  Equivalent of VSIF 76.
+         Note :  This MIB only works in DOCSIS 1.0+ mode"
+    DEFVAL { 0 }
+    ::= { saMtaDevice 11 }
+
+saMtaDevEchoCanceller OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS 	  read-write
+    STATUS        current
+    DESCRIPTION	
+        "Enable/Disable echo cancellation for all calls.
+         If set to disable(0), it overwrites e:on parameter in CRCX/MDCX.
+         Note:  Equivalent of VSIF 34."
+    DEFVAL { 1 }
+    ::= { saMtaDevice 12 }
+
+saMtaDevCrestFactor OBJECT-TYPE
+    SYNTAX INTEGER {
+        cf10(0),
+        cf11(1),
+        cf12(2),
+        cf13(3),
+        cf1414(4)
+    }
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "For DOCSIS 2.0 Modems:
+        This MIB setting adjusts the ring waveform crest factor to 
+         one of the following possible values 
+         (1.0, 1.1, 1.2, 1.3, 1.414 (sine wave)) 
+         The default mode enables sine wave ringing signals.
+         ID     Crest Factor
+         0   :   1.0
+         1   :   1.1
+         2   :   1.2
+         3   :   1.3
+         4   :   1.414
+         To use this MIB setting set this value to 0,1,2,3 or 4. 
+         The default value for all countries is cf1414(4), except for 
+         Belgium which is cf13(3)
+         
+         For DOCSIS 3.0 Modems:
+         This MIB allows for the seting of two ring waveforms. The setting 
+         of sinusoidal(1) will result in a sinusoidal ring waveform with 
+         crest factor of 1.414, while the setting of trapezoidal(2) will
+         result in a trapezoidal ring waveform with crest factor of 1.25.
+         
+         NOTE: This MIB will implement the D3.0 behavior in a future release 
+         of the D2.0 softweare.
+         "
+    ::= { saMtaDevice 13 }
+
+saMtaDevRingVoltageOffset OBJECT-TYPE
+    SYNTAX INTEGER {
+        balanced-NoOffset(1),
+        balanced-TipPos16V(2),
+        balanced-RingPos16V(3)
+    }
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "This setting controls the DC offset on the telephone loop during the Ring cycle.
+         1:  (Default) Balanced ringing - No Offset
+         2:  Balanced with 16V offset (Tip more positive)
+         3:  Balanced with 16V offset (Ring more positive)"
+    ::= { saMtaDevice 14 }
+
+-- =========================
+-- JITTER OBJECTS START HERE
+-- =========================
+
+saMtaDevJitterBase   OBJECT IDENTIFIER ::=  { saMtaDevice 15 }
+
+saMtaDevJitVoiceMaxLen OBJECT-TYPE
+    SYNTAX INTEGER (0..200)
+    UNITS           "milliseconds"
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+        "This object defines Maximum Holding Time
+         for jitter buffer (STATIC or ADAPTIVE as selected
+         by saMtaDevJitVoiceType) in VOICE mode.
+         When the buffer is filled with this value,
+         incoming packets will be discarded.
+         In STATIC buffer mode initial buffer fill (delay)
+         is half of the value.
+         Note: this is the maximum delay that voice packets
+         experience in the buffer.
+         If the value of the object is changed through SNMP,
+         then those changes MUST take affect starting with
+         the next phone call (in process calls MUST NOT be
+         affected, and MUST remain at the setting obtained
+         at the start of the call)."
+    DEFVAL { 60 }
+    ::= { saMtaDevJitterBase 1 }
+ 
+saMtaDevJitVoiceMinLen OBJECT-TYPE
+    SYNTAX INTEGER (0..50)
+    UNITS           "milliseconds"
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+         "This object defines the value below which
+         the ADAPTIVE jitter buffer will not adapt, even if network
+         jitter is smaller.
+         Note: saMtaDevJitVoiceMinLen must be set less than or equal
+               to saMtaDevJitVoiceMaxLen/2.
+         Note: When STATIC buffer is used, this object in meaningless.
+         If the value of the object is changed through SNMP,
+         then those changes MUST take affect starting with
+         the next phone call (in process calls MUST NOT be
+         affected, and MUST remain at the setting obtained
+         at the start of the call)."
+    DEFVAL { 10 }
+    ::= { saMtaDevJitterBase 2 }
+
+saMtaDevJitCommitSetting OBJECT-TYPE 
+    SYNTAX INTEGER { 
+        true(1), 
+        false(2),
+        error(3)
+    } 
+    MAX-ACCESS    read-write 
+    STATUS        obsolete 
+    DESCRIPTION 
+        "Config the lower bound and upper bound of the jitter buffer length.         
+         Setting this object to true(1) causes saMtaDevJitMaxLen and 
+         saMtaDevJitMinLen to be committed on the device.
+         Reading this object should returns false(2).
+         If saMtaDevJitMinLen > (saMtaDevJitMaxLen/2), 
+         it will return error(3).
+         Note: 0 =< saMtaDevJitMinLen <= (saMtaDevJitMaxLen/2)" 
+    DEFVAL { 2 }
+    ::= { saMtaDevJitterBase 3 }
+
+saMtaDevJitTarget OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS           "milliseconds"
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "This object reads the target value for jitter buffer.
+         If in STATIC buffer mode, this initial holding time is half of
+         either saMtaDevJitVoiceMaxLen or saMtaDevJitDataMaxLen.
+         In ADAPTIVE buffer mode this value is based on network
+         jitter that MTA detects.
+         If the value of the object is changed through SNMP,
+         then those changes MUST take affect starting with
+         the next phone call (in process calls MUST NOT be
+         affected, and MUST remain at the setting obtained
+         at the start of the call)."
+    ::= { saMtaDevJitterBase 4 }
+
+saMtaDevJitVoiceType OBJECT-TYPE
+    SYNTAX INTEGER {
+         static(1),
+         adaptive(2)
+         }
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+        "This object defines if ADAPTIVE or STATIC
+         jitter buffer is used for VOICE calls.
+         Note: for DATA calls the buffer is always STATIC.
+         If the value of the object is changed through SNMP,
+         then those changes MUST take affect starting with
+         the next phone call (in process calls MUST NOT be
+         affected, and MUST remain at the setting obtained
+         at the start of the call)."
+    DEFVAL { 2 }
+    ::= { saMtaDevJitterBase 5 }
+
+saMtaDevJitDataMaxLen OBJECT-TYPE
+    SYNTAX INTEGER (0..200)
+    UNITS           "milliseconds"
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+        "This object defines Maximum Holding Time for
+         STATIC jitter buffer in DATA mode.
+         Initial buffer fill (delay) is half of the value.
+         This object controls the hold time for fixed VBD jitter buffer. The jitter buffer always fixes itself when VBD is detected and never adapts below this level, so this value serves as a minimum too.
+         If the value of the object is changed through SNMP,
+         then those changes MUST take affect starting with
+         the next phone call (in process calls MUST NOT be
+         affected, and MUST remain at the setting obtained
+         at the start of the call). 
+         "
+    DEFVAL { 60 }
+    ::= { saMtaDevJitterBase 6 }
+
+-- =======================
+-- JITTER OBJECTS END HERE
+-- =======================
+
+saMtaDevProvisionalResponse OBJECT-TYPE 
+    SYNTAX     TruthValue 
+    MAX-ACCESS    read-write 
+    STATUS        current 
+    DESCRIPTION 
+        "Switches Provisional Response on or off." 
+    DEFVAL { true } 
+    ::= { saMtaDevice 16 } 
+    
+saMtaDevRtpPortNumber OBJECT-TYPE
+    SYNTAX Integer32 (1025..65535)
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Specifies which UDP port to use for RTP packets. If this is set to
+         x, then the port assignement will be:
+                RTP  port is x   for 1st active connection.
+                RTCP port is x+1 for 1st active connection.
+                RTP  port is x+2 for 2nd active connection.
+                RTCP port is x+3 for 2nd active connection.
+                RTP  port is x+4 for 3rd active connection.
+                RTCP port is x+5 for 3rd active connection.
+                RTP  port is x+6 for 4th active connection.
+                RTCP port is x+7 for 4th active connection.
+         NOTE : Maximally four connections are supported in two endpoints.
+         Note:  This object can be set via the MTA configuration file ONLY."
+DEFVAL { 53456 }
+    ::= { saMtaDevice 17 }    
+
+saMtaDevNcsPiggyBacking OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "Enable/Disable NCS PiggyBacking.
+         0:  Disable NCS Piggy Backing.
+         1:  Enable NCS Piggy Backing."
+    ::= { saMtaDevice 18 }
+
+saMtaDevLoopCurrent OBJECT-TYPE 
+    SYNTAX INTEGER (25|40)
+    UNITS         "milliampers" 
+    MAX-ACCESS    read-write 
+    STATUS        current 
+    DESCRIPTION 
+        "This object defines phone ports loop current. 
+         The default value for all countries is 25 mA, except for Belgium 
+         which is 40 mA" 
+    ::= { saMtaDevice 19 }
+
+saMtaDevMgcpAuepZn2 OBJECT-TYPE
+   SYNTAX INTEGER {
+       perSpec(1),
+       dontSend(2)
+   }
+   MAX-ACCESS    read-only
+   STATUS        current
+   DESCRIPTION
+       "Set the requirement for sending ZN: 2
+        1: as defined in PacketCable NCS spec
+        2: do not send
+        Note:  This object can be set via the MTA configuration file
+        ONLY."
+   DEFVAL { 1 }
+   ::= { saMtaDevice 20 } 
+
+saMtaDevForceT38 OBJECT-TYPE 
+    SYNTAX INTEGER { 
+       normal(0), 
+       forceOn(1), 
+       forceOff(2) 
+    } 
+    MAX-ACCESS    read-write 
+    STATUS        current 
+    DESCRIPTION 
+        "T.38 normally requires LCO options to negotiate.  There may be cases 
+         where it is desired to either force T.38 to negotiate or prevent 
+         T.38 from negotiating.   The following options are supported: 
+         normal(0)    - If T.38 options are present in LCO, then negotiate 
+         force_on(1)  - Negotiate T.38 whether or not the options are present 
+                        in LCO 
+         force_off(2) - Prevent T.38 from negotiating even if specified in 
+                        the LCO" 
+   DEFVAL { 0 } 
+    ::= { saMtaDevice 21 } 
+
+saMtaDevDnsNonAaCache OBJECT-TYPE
+    SYNTAX INTEGER {
+        false(0),
+        true(1)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This object allows MTA to cache DNS non-authoritative answers.
+        Non-authoritative responses come from servers that have cached
+        an answer for a given host, but received that information from
+        a server that is not authoritative for the domain.
+        Non-authoritative response has AA flag cleared in a DNS packet."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 22 }
+
+saMtaDevUgsAdControl OBJECT-TYPE
+    SYNTAX INTEGER {
+        noUgsAd(0),
+        perNcs(1)
+
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This object can control the use of UGS-AD service flow:
+         NoUgsAd(0) - UGS-AD support is disabled. UGS is always used.
+         perNcs(1) - UGS-AD is used per CRCX/MDCX LCO."
+    DEFVAL { 1 }
+    ::= { saMtaDevice 23 } 
+
+saMtaDevRtpMute OBJECT-TYPE
+    SYNTAX INTEGER {
+        noMute(0),
+        onLocalRingBack(1)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This object controls muting the incoming RTP packets:
+         noMute(0) - RTP packets are always played out
+         onLocalRingBack(1) - incoming RTP packets are muted when MTA
+             is commanded to play local ringback. The muting stops when
+             local ringback stops either through signaling or timeout."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 24 } 
+
+-- ===============================
+-- LOOP VOLTAGE OBJECTS START HERE
+-- ===============================
+
+saMtaDevLoopVoltage OBJECT IDENTIFIER ::=  { saMtaDevice 25 }
+
+saMtaDevLoopVoltageMaintain OBJECT-TYPE
+    SYNTAX INTEGER {
+        maintainLvWhenOnline(0),
+        maintainLvAllTimes(1),
+        maintainLvUntilTimerExpires(2),
+        maintainLvWhileRFdetected(3)
+        }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+	"This setting controls the tip/ring voltage applied to the line(s)
+         in various conditions.
+	 0: Maintain loop voltage only as long as the EMTA is online.
+            Remove loop voltage from endpoints if the EMTA loses DOCSIS
+            downstream for more than 30 seconds or reboots/resets for any
+            reason.
+	 1: Indefinitely maintain on-hook loop voltage even if DOCSIS
+            downstream is lost or EMTA reboots/resets for any reason.
+	 2: Maintain loop voltage while the EMTA is online, but allow a
+            grace time.  If the EMTA loses downstream or reboots/resets for
+            any reason, loop voltage will be maintained until the
+            expiration of saMtaDevLoopVoltageMaintainTimer.
+	 3: Maintain loop voltage as long as any RF energy is detected.
+            Loop voltage will be removed only when the EMTA completes a
+            complete RF scan with no energy detected."
+    DEFVAL { 0 }
+    ::= { saMtaDevLoopVoltage 1 }
+
+saMtaDevLoopVoltageMaintainTimer OBJECT-TYPE
+    SYNTAX INTEGER (30..86400)
+    UNITS "seconds"
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "When this timer expires, loop voltage is removed.  This timer is
+         only applicable to certain values of saMtaDevLoopVoltageMaintain.
+         The timer starts when the EMTA loses downstream, or resets
+         (subject to the note below).
+	 NOTE: If the EMTA reboots due to the reset button being pressed or
+         a docsDevResetNow SET, this timer may take 15-30 seconds to be
+         initiated, although loop voltage is still maintained."
+    DEFVAL { 300 }
+    ::= { saMtaDevLoopVoltage 2 }
+
+-- =============================
+-- LOOP VOLTAGE OBJECTS END HERE
+-- =============================
+
+saMtaDevDisconnectedTone OBJECT-TYPE
+    SYNTAX INTEGER {
+	none(0),
+	fastBusy(1)
+    }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object defines a tone when the user attempts to initiate a call
+        and one of the following conditions is present:
+	1)	No upstream bandwidth available (DSA Rejected)
+	2)	PSTN congestion
+	3)	RF Connectivity Lost"
+    DEFVAL { 0 }
+    ::= { saMtaDevice 26 }          
+
+saMtaDev2833WithoutLCO  OBJECT-TYPE
+    SYNTAX INTEGER {
+        requireLCO(0),
+        force2833(1)
+    }
+    MAX-ACCESS 	  read-write
+    STATUS        current
+    DESCRIPTION	
+        " RFC2833/LCS defines a way to signal various telephone events (like DTMF) via RTP packets.  
+          Normally, LCS/RFC2833 requires entries in the local connection options (LCO) 
+          during call establishment.  
+          This MIB enables RFC2833/LCS during a call even without the LCO specifying this operation."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 27 }
+
+saMtaDevPktcEventLogEntries  OBJECT-TYPE
+    SYNTAX INTEGER
+    MAX-ACCESS 	  read-only
+    STATUS        current
+    DESCRIPTION	
+        "Defines the number of entries in the event log as seen on the WebWizard Log page.
+        If this object is set to 0, there are no events shown.
+        Note: This object does not change the number of events entries in the event table MIB."
+    DEFVAL { 256 }
+    ::= { saMtaDevice 28 }
+
+saMtaDev2833KeepAlive  OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS 	  read-write
+    STATUS        current
+    DESCRIPTION	
+        "Controls DTMF relay keep-alive message."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 29 }
+
+saMtaDevNegotiateSingleCodec OBJECT-TYPE 
+    SYNTAX INTEGER { 
+       false(0),
+       true(1)
+    } 
+    MAX-ACCESS    read-write 
+    STATUS        current 
+    DESCRIPTION 
+        "Normally an MTA will negotiate a list of codecs with the far end,
+         reserve bandwidth according to the least-upper-bound (LUB, or
+         ‘worst case’) codec, and return the entire negotiated list in the
+         Local Connection Descriptor in the SDP.  This setting is used to
+         force the MTA to negotiate only a single codec, reserve bandwidth
+         for that codec only, and return only that codec in the LCD.
+         NOTE: For this feature to work properly, VSIF 73 must be set in the 
+               cable modem config file.  The value must have '03' as the
+               second octet, for example '01.03.01.01.01'.
+         NOTE: This setting should be used only to resolve interoperability
+               problems with certain Motorola CMTS releases, and only after
+               consulting Scientific Atlanta.
+         0: false - Negotiate codecs normally, reserve LUB, return entire
+                    list in LCD (default)
+         1: true - Negotiate only single codec"
+   DEFVAL { 0 }
+    ::= { saMtaDevice 30 }
+
+saMtaDevResetCleanupTimeout OBJECT-TYPE
+    SYNTAX      Unsigned32 (0..64000)
+    UNITS       "minutes"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "If set this object causes the entire MTA to reset if voice connections have been
+        active and both voice lines have been on-hook for a period greater than the value
+        defined via this MIB object.  This will guarantee that orphaned connections and/or 
+        service flows are properly cleaned up and freed when the CMTS and CMS fail to perform
+        the correct clean up operations.  It will also ensure that the EMTA state machine, DSP
+        voice channels, NCS connection handling, etc. are also restored to a default state.  
+        This protects against any unknown case that could possibly cause stuck service flows
+        and/or connections.  If the MIB object is set to 0 then this function is disabled.  If
+        the MIB is set from 1 to 64000 minutes then the feature is enabled and this value is
+        used for the timeout."
+    DEFVAL { 1 }
+    ::= { saMtaDevice 31 }
+
+saMtaDevCmsRedirect OBJECT-TYPE
+    SYNTAX INTEGER {
+        denyNonIpSec(0),
+        allowNonIpSec(1)
+    }
+    MAX-ACCESS read-only
+    STATUS	current
+    DESCRIPTION
+	  "This setting allows an endpoint to be redirected to a new call agent
+         without using Ipsec, and without having that endpoint listed in the
+         pktcMtaDevCmsTable in the MTA config file.
+ 	   0: do not allow redirect without Ipsec unless call agent is defined
+            in pktcMtaDevCmsTable
+ 	   1: allow redirect without Ipsec even if call agent is not defined in
+            pktcMtaDevCmsTable
+         NOTE:  This setting is ONLY applicable to ProvMode 0 (fully
+                PacketCable compliant provisioning).  ProvModes 1, 2 and 3
+                already allow redirect without Ipsec to an undefined call
+                agent. See saCmMtaProvisioningMode for provisioning modes."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 32 }
+
+saMtaDevExitRsipDisconnectState OBJECT-TYPE
+      SYNTAX INTEGER {
+          perSpec(0),
+          onAnyMsgFromCms(1)
+          }
+      MAX-ACCESS read-write
+      STATUS current
+      DESCRIPTION
+          "This MIB enables the operator to exit the RSIP disconnected state in the
+           MTA that follow non-standard method other than packetCable call flow. 
+           When the value is set to 0, the MTA will follow packet cable standard
+           disconnect procedure. 
+
+           When the value is set to 1 the MTA will follow non-packet cable
+           standards where any connection message (CRCX,MDCX or DLCX) or RQNT from
+           Call agent will get the MTA out of
+           disconnect state and change its state to connected. The AUEP will NOT
+           make the MTA to exit the disconnected state
+           
+           This setting will allow MTA to recover from RSIP flood state where MTA
+           will be in disconnected state and any message from Call agent will
+           initiate a avalanche of messages from call agent and MTA."
+      DEFVAL { 0 }
+      ::= { saMtaDevice 33 }
+
+saMtaDevBell103Ntfy OBJECT-TYPE
+    SYNTAX INTEGER {
+           none(0),
+           modemtone(1),
+           faxtone(2)
+           }
+    MAX-ACCESS read-write
+    STATUS  current
+    DESCRIPTION
+        "This setting allows an endpoint to send NTFY upon detecting bell 103 tones (2200Hz to 2250 Hz.
+         The  default behavior is to not send NTFY upon detecting these tones ( ECAN OFF, NLP OFF),
+         If the value is set to 1  it sends modem tone ( with ECAN OFF , NLP OFF),
+         if value is set 2 it sends fax tone detection ( ECAN ON , NLP  OFF)
+         In order for saMtaDevBell103Ntfy to report Bell 103 tones to CMS, 
+         saMtaEndPntCtrlAlarmPanelAndPosTerminalDetection needs to be set to enabled."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 34 }
+
+saMtaDevAutoSendOSI OBJECT-TYPE
+    SYNTAX Integer32 (0..200)
+    UNITS   "seconds"
+    MAX-ACCESS read-write
+    STATUS  current
+    DESCRIPTION
+       "This setting allows an endpoint to enable the auto OSI feature.
+         The default timer value is 0 (Disable performing an Auto OSI). If any value other than 0 is set,
+         then that value will be used as a timer. This timer should start as soon as a 250 Message
+         is sent out in response to a DLCX and on expiry trigger the EMTA to perform an OSI.
+         This timer should start only if there are NO valid connections or endpoints in the OFFHOOK state.
+         
+         Behavior in the case where the switch is sending an OSI and the auto OSI feature is enabled 
+         (I.E. saMtaDevAutoSendOSI has a timer value other than 0):
+		 - The EMTA will not generate its own OSI after performing a switch commanded OSI.
+		 - If the EMTA receives a switch commanded OSI after performing an auto OSI, it will not perform a second OSI.  
+		 - If the EMTA receives a switch commanded OSI at the same time the timer expires, the EMTA will will perorm the 
+		   switch commanded OSI and not perform a second OSI.
+                 
+         Note: This MIB object is applicable to all EMTA NCS Software except HW model DPX2213."
+    DEFVAL { 0 }
+      ::= { saMtaDevice 35 }
+
+saMtaDevConnectionCleanupTimeout OBJECT-TYPE
+    SYNTAX      Unsigned32 (0..64000)
+    UNITS       "seconds"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "If set this object causes the MTA to tear down and clean up connections and the
+         associated service flows on any endpoint that detects a transition from off-hook
+         to on-hook, remains onhook for a period longer than the value set in this MIB object,
+         and has connections that were active prior to the endpoint going onhook.  If the MIB
+         object is set to 0 then this function is disabled.  If the MIB is set from 1 to 64000
+         seconds then the feature is enabled and this value is used for the timeout."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 36 }
+
+saMtaDevNcsKparam OBJECT-TYPE
+    SYNTAX INTEGER {
+        perSpec(0),
+        neverSend(1)
+        }
+    MAX-ACCESS read-write
+    STATUS  current
+    DESCRIPTION
+        "This setting allows the MTA to decide whether to send K: parameter on the NCS 200 OK
+         final response and wait for responseAck from the call agent."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 37 }
+
+saMtaDevLogPageSigEntriesLimit OBJECT-TYPE
+    SYNTAX INTEGER
+    MAX-ACCESS 	  read-only
+    STATUS        current
+    DESCRIPTION	
+        "Defines the number of Call Signalling (MGCP or SIP) message entries in the event log as seen 
+         on the WebWizard Log page.
+        If this object is set to 0, there are no events shown.
+        Note: This object does not change the number of events entries in the event table MIB."
+    DEFVAL { 256 }
+    ::= { saMtaDevice 38 }
+
+saMtaDevEcanTailLength OBJECT-TYPE
+    SYNTAX INTEGER {
+        echoTail8ms(8),
+        echoTail16ms(16),
+        echoTail24ms(24),
+        echoTail32ms(32)
+        }
+    UNITS "milliseconds"
+    MAX-ACCESS read-write 
+    STATUS obsolete
+    DESCRIPTION
+        "This object specifies the echo cancellation tail length. 
+         If the echo cancellation tail length is changed through SNMP,
+         then those changes take effect starting with the next phone
+         call (in process calls are not affected)."
+    DEFVAL { 24 }
+::= { saMtaDevice 39 }
+
+
+-- callerID tree
+
+saMtaDevCallerIdMib OBJECT IDENTIFIER ::= { saMtaDevice 40 }
+
+saMtaDevCidMissingSigTime OBJECT-TYPE
+    SYNTAX INTEGER {
+        useCmTod(0),
+        suppressToD(1)
+        }
+    MAX-ACCESS read-write
+    STATUS  current
+    DESCRIPTION
+        "This setting allows an endpoint to send the time field in a caller
+         identification (CID) message based on the following:
+         The  default behavior (0) is to send the information included in
+         the NCS message, or send the current modem Time of Day (TOD) if
+         not provided in the NCS message.
+         NOTE: If VSIF85=0 or saCmMtaRequireTod=0, then the modem clock
+         starts at the default value of 00:00 01/01/1970.  See above
+         referenced VSIF or MIB for further information and restrictions.
+         If the value is set (1) MTA will not send any information for the
+         Type 01 field (time field). Note: This may not be compatible with
+         all CPE devices."
+         DEFVAL { 0 }
+    ::= { saMtaDevCallerIdMib 1 }
+
+saMtaDevCidNameChange OBJECT-TYPE
+    SYNTAX INTEGER {
+        none(0),
+        pAndO(1)
+        }
+    MAX-ACCESS read-write
+    STATUS  current
+    DESCRIPTION
+        "This object allows the MTA to change the caller id information
+         that is sent to CPE when the caller id is either P (P Class) or
+         O (O Class) in the NCS message. If the value in the NCS caller id
+         field is P, MTA will send the name 'Private' to the phone. For O,
+         MTA will send 'Out of Area'.
+         The default value will follow Bellcore/ETSI spec and allow CPE
+         to display relevant caller id information."
+    DEFVAL { 0 }
+    ::= { saMtaDevCallerIdMib 2 }
+
+saMtaDevCidNameLength OBJECT-TYPE
+    SYNTAX INTEGER {
+        perSpec(0),
+        set1ByteLength(1),
+        noNameField(2),
+        setReasonOfAbsence0(3)
+        }
+    MAX-ACCESS read-write
+    STATUS  current
+    DESCRIPTION
+        "This setting allows an endpoint to set the calling name field to
+         1 byte length and provide caller id to the CPE attached. Some of
+         the CPEs do not display the caller id information to the CPE if
+         the calling name field is null.If set to noNameField, no CPN is sent
+         in the FSK when NameField is empty."
+    DEFVAL { 0 }
+    ::= { saMtaDevCallerIdMib 3 }
+
+saMtaDevCidConvertPlus OBJECT-TYPE
+    SYNTAX        TruthValue
+    MAX-ACCESS read-write
+    STATUS  current
+    DESCRIPTION
+        "This object allows the MTA to change + sign in international
+         number to 00 when sending the caller id information."
+    DEFVAL { false }
+    ::= { saMtaDevCallerIdMib 4 }
+
+-- end of callerID tree
+
+
+saMtaDevDhcpNak OBJECT-TYPE
+    SYNTAX INTEGER {
+         ignoreWhenOffHook(1),
+         perRfc(2)
+         }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+         "This MIB controls the behavior of the MTA when it has one or more
+          endpoints off hook and it receives a DHCP NAK in response to a
+          renewal request. 
+          This object does not affect or control CM DHCP process. 
+          1: Don't disturb call in progress. MTA DHCP client ignores DHCP NAK
+             upon DHCP renewal when an endpoint is offhook. In this scenario,
+             MTA DHCP client sends DHCP renewal requests with an exponential
+             back-off algorithm (4 sec, 8 sec, 16 sec, 32 sec, 64 sec) and
+             repeats this algorithm until hook state changes to onhook. When
+             all endpoints are onhook, MTA follows the DHCP process
+             recommended by  PacketCable/RFC. Note: If the DHCP lease expires,
+             the MTA will follow the DHCP process recommended by
+             PacketCable/RFC without regard to endpoint hook state.
+          2: Interrupt call in progress.  Follow Default PacketCable/RFC
+             compliant behavior without regard to endpoint hook status."
+    DEFVAL { 2 }
+::= { saMtaDevice 41 }
+
+saMtaDevEndofDigitString OBJECT-TYPE
+    SYNTAX INTEGER {
+        perSpec(0),
+        useHash(1),
+        useStar(2),
+        useHashOrStar(3)
+        }
+    MAX-ACCESS read-write
+    STATUS  current
+    DESCRIPTION
+        "This setting allows the MTA to treat # and/or * as the end of string
+         character if it’s not specified in the digit map from Call agent.
+         Example: If #3# is entered, eMTA reports #3 immediately to call agent
+         because last # will be treated as end of digit as there is no match
+         in digit map ."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 42 }
+
+saMtaDevEmbeddedRequestTO OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+        }
+    MAX-ACCESS read-write
+    STATUS  current
+    DESCRIPTION
+        "When enabled(1),the MTA allows an endpoint to set the definition of 
+         the confirmation tone from being a brief (BR) signal to a timeout (TO)
+         signal. In such case, when the confirmation tone timeout would expire,
+         the MTA would apply the embedded request (play dial tone, collect
+         digits). The timeout value would be 1500 ms. The Default value would
+         follow packet cable spec and would set the confirmation tone to brief
+         tone(BR)"
+    DEFVAL {0}
+    ::= { saMtaDevice 43 }
+
+saMtaDevSnmpTosValue OBJECT-TYPE
+    SYNTAX        Integer32 (0..63)
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "This is used to set the value of the upper 6 bits of the diff-serve byte for transmitted SNMP packets
+         To set the diff-serve byte to 0xA0 in outgoing packets, set this field to 0x28
+         EX:     0xA0 = 1010 0000 (binary)
+              => 0x28 = 1010 00 (binary)
+              => 40 (dec)"
+    DEFVAL { 0 }
+    ::= { saMtaDevice 44 }
+
+saMtaDevQuarantineQueueDepth OBJECT-TYPE
+    SYNTAX     Unsigned32 (1..100)
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+        "This object contains the max number of the queued NCS events
+         the MTA can store during lock step mode.
+         Equivalent to VSIF 87."
+    DEFVAL { 100 }
+    ::= { saMtaDevice 45 }
+
+saMtaDevNotificationMode OBJECT-TYPE
+    SYNTAX INTEGER {
+        lockStep(0),
+        loopMode(1)
+        }
+    MAX-ACCESS         read-write
+    STATUS        current
+    DESCRIPTION       
+        "This object sets the MTA in either loopmode
+         or lockstep mode for MGCP signaling."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 46 }
+
+saMtaDevReversePolarityEnable OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Controls reverse polarity generation at the time the called party answers the call."
+    DEFVAL { false }
+    ::= { saMtaDevice 47 }
+
+saMtaDevDsaPollJitter OBJECT-TYPE
+    SYNTAX INTEGER {
+        sameAsGrantJitter(0),
+        sameAsNominalPolling(1)
+        }
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Controls the value of Tolerated Poll Jitter in DSA-REQ. The value might
+         be equal to the Nominal Polling Interval or equal to Tolerated Grant
+         Jitter. This MIB reflects the changes in PackeCable 1.5 DQoS specification."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 48 }
+
+saMtaDevTddDetection OBJECT-TYPE
+    SYNTAX BITS {
+        enable1100Hz(0),
+        enable1400Hz(1)
+        }
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION 
+        "This object allows the selective detection of 1100Hz and 1400Hz audio tones
+         that indicate the beginning of Modem/Fax/TDD calls. 2100Hz used for modern
+         modems is always detected and cannot be disabled.
+         This MIB object replaces VSIF79."
+    DEFVAL { 'c0'h }
+    ::= { saMtaDevice 49 }
+
+saMtaDevLcoTosOverride OBJECT-TYPE
+    SYNTAX INTEGER {
+        ncsMsgControlled(0),
+        overrideNcsMsgParam(1)       
+        }
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION 
+        "This Object allows  ToS settings by MIB to override the LCO setting of ToS
+         in the CRCX message. Will also disregard any incorrect formatting of the
+         't:' parameter and allow the CRCX to complete successfully.
+         The default value (0) will override any Tos settings set by MIBs and the
+         value in the NCS messages will be applied. The value of 1 overrides the LCO
+         t: parameter. t: will be ignored, even if it contains an incorrect format
+         (i.e. single hex digit).
+         This MIB object replaces VSIF 86."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 50 }
+
+saMtaDevMaintenance OBJECT IDENTIFIER ::= { saMtaDevice 51 }
+
+saMtaDevMaintenanceWindowBegin OBJECT-TYPE
+    SYNTAX      DateAndTime
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object identifies the start of an eMTA maintenance window. A maintenance
+         window is a period of time during which the ISP may perform network
+         maintenance operations and network outages or software resets may
+         occur. During a maintenance window, the eMTA will maintain the line
+         voltage of an MTA regardless of CM resets, MTA resets, or RF losses.
+         If any of these conditions occurs or persists outside of the scheduled
+         maintenance window then the line voltage will be dropped unless the
+         corresponding bit for the condition in question is set in the
+         saMtaDevMaintenanceControlMask MIB. If this object has never been set,
+         it will have the value of midnight, January 1, 1970. Note that the
+         time value used here is the local time as known by the device, as
+         opposed to UTC. Also note that the value of this object will persist
+         across a system reboot."
+    ::= { saMtaDevMaintenance 1 }
+
+saMtaDevMaintenanceWindowDuration OBJECT-TYPE
+    SYNTAX      INTEGER (0..3600)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object identifies the duration, in seconds, of an eMTA maintenance window.
+         Setting the value of this object to the default value of zero will
+         cancel the maintenance window. Note that the value of this object
+         will persist across a system reboot."
+    ::= { saMtaDevMaintenance 2 }
+
+saMtaDevMaintenanceControlMask OBJECT-TYPE
+    SYNTAX BITS {
+         maintenanceOnCmReset(0),
+         maintenanceOnRFLoss(1),
+         maintenanceOnMtaReset(2),
+         maintenanceOnCMSLoss(3)
+         }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object identifies the bit mask to control the line voltage behavior of the eMTA in
+         various scenarios:
+         maintenanceOnCmReset(0) -  if this bit is set to 1 it requires the line
+         voltage be maintained in the case when the CM has been reset, regardless
+         of the reason (reset after downloading a new firmware, or hard reboot, or
+         SNMP induced CM reset), and regardless of whether the MTA is in a valid
+         maintenance window maintenanceOnRFLoss(1) - if this bit is set to 1 it
+         requires the line voltage be maintained in the case when RF communication
+         is lost, regardless of the reason, and regardless of whether the MTA is
+         in a valid maintenance window maintenanceOnMtaReset(2) - if this bit is
+         set to 1 it requires the line voltage be maintained in the case when the
+         eMTA is being reset, regardless of the reason (e.g. SNMP induced eMTA reset,
+         etc), and regardless of whether the MTA is in a valid maintenance window
+         maintenanceOnCMSLoss(3) - if this bit is set to 1 it requires the line
+         voltage be maintained in the case when communication is lost with the CMS,
+         regardless of the reason (e.g. endpoint disconnected, etc), and regardless
+         of whether the duration of the communication loss has exceeded the value
+         in the MIB saMtaDevMaintenanceQuarantineTimeout and/or saMtaDevMaintenanceDisconnectedTimeout
+         The default value of this object may change based on build specific options.
+         However, it's highly recommended that the default value in the image submitted
+         for (E)PC 1.x Certification be chosen in such a way that it will correspond
+         to the functionality compliant with the PacketCable requirements and will
+         preserve the backward compatibility with the previously certified behaviour.
+         Note that to satisfy the latter, 'maintenanceOnCMSLoss(3)' bit should be set
+         by default."
+    ::= { saMtaDevMaintenance 3 }
+
+saMtaDevMaintenanceQuarantineTimeout OBJECT-TYPE
+    SYNTAX      Unsigned32 (0..3600)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object identifies the time the emta maintains line voltage after the
+         emta enters the quarantine state.The line voltage will not be dropped
+         unless the maintenanceOnCMSLoss bit is set in the saMtaDevMaintenanceControlMask
+         object.
+         This object is stored in non-vol."
+    DEFVAL { 120 }
+    ::= { saMtaDevMaintenance 4 }
+
+saMtaDevMaintenanceDisconnectedTimeout OBJECT-TYPE
+    SYNTAX      INTEGER (0..3600)
+    UNITS       "seconds" 
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The Time the EMTA maintains line voltage after it lost its connectivity to the
+         CMS.The bit in maintenanceOnCMSLoss must be set in the saMtaMaintenanceControlMask
+         object for the timer to take effect.Note that the value of this object will persist
+         across a system reboot.
+         This object is stored in non-vol."
+    DEFVAL { 120 }
+    ::= { saMtaDevMaintenance 5 }
+
+saMtaDevMaintenanceRFDisconnectTimeout OBJECT-TYPE
+    SYNTAX      INTEGER (0..3600)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The time an emta maintains the line voltage after a RF loss. The RF loss is when
+         the EMTA lost its connectivity with CMTS ( T4 timer). The bit must be set in the
+         saMtaMaintenanceControlMask MIB for the timer to take effect.
+         This object is stored in non-vol."
+    DEFVAL { 300 }
+::= { saMtaDevMaintenance 6 }        
+
+
+saMtaDevIgnoreRtpMap OBJECT-TYPE
+    SYNTAX INTEGER {
+        perSpec(0),
+        ignorertpMap(1)
+    }
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "This object allow the call to complete when invalid rtpmap values are sent in the SDP. The spec compliant behavior is to send 510 Protocol error. Currently this object will work only for rtpmap set to 0 for DTMF"
+
+    DEFVAL { 0 }
+    ::= { saMtaDevice 52 }
+    
+
+saMtaDevSlicVoltageBoost OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)       
+        }
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "When this feature is enabled(1), increased HVG circuit DC voltage is applied to the SLICs. The increased voltage helps to reduce the effect of common mode noise produced by some types of multiline phones. This mib object is written to non-vol.
+		Note: Increasing the offhook HVG voltage will also impact battery life."
+    DEFVAL { 0 }
+    ::= { saMtaDevice 53 }   
+    
+saMtaDevOSITimerInterval OBJECT-TYPE
+    SYNTAX INTEGER (300..1000)    
+    UNITS           "milliseconds"
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+       "This object allows the modification of OSI Timer Interval which opens the loop for the set value. 
+       The timer will be triggered after the EMTA received the RQNT (for OSI) from Call agent and drops the line voltage to 0 for the duration set by the MIB"
+       
+    DEFVAL { 1000 }
+    ::= { saMtaDevice 54 }
+       
+saMtaDevSdpSuppression OBJECT-TYPE
+	SYNTAX BITS {
+        simpleSuppression(0),
+        simpleandT38Suppression(1),
+        attributeT38Suppression(2),
+        xPCAttributeSuppression(3)
+        }
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION 
+        "When the bit simpleSuppression(0) is set, the EMTA suppresses the simple SDP capability parameters and 
+        descriptions not needed in negotiation as outlined in RFC3407 .
+ 	 	
+ 	 	When the bit simpleandT38Suppression(1) is set, the EMTA suppresses simple SDP capability parameters and descriptions 
+ 	 	for T.38 negotiation (if T.38 strict is not used) as described in RFC3407 .  
+ 	
+ 		When the bit attributeT38Suppression(2) is set, the EMTA suppresses the T.38 attributes in the SDP.
+ 	
+ 		When the bit xPCAttributeSuppression(3) is set, the EMTA suppresses the X-PC attributes in the SDP if no RTP/RTCP authentication 
+ 		and encryption is used.
+ 	
+ 		The default value of this object is to have no suppression of the SDP.  The default value of this object is compliant with the PacketCable 
+ 		requirements - all bits are cleared.  Setting any bits other than the SimpleSuppression bit would be PacketCable non-compliant.  
+ 		"
+    ::= { saMtaDevice 55 }	
+
+saMtaDevDTMFRelayPayloadType OBJECT-TYPE
+	SYNTAX INTEGER (96..127)
+	UNITS       "port number"
+    MAX-ACCESS     read-write
+    STATUS         current
+    DESCRIPTION
+       "The preferred RTP payload type to be advertized for NTE (RFC 2833) events reporting. 
+        This value will be used when negotiation for media takes place during call establishment.
+        0 is the default which is as defined in PacketCable NCS spec (dynamic port 96-127)
+        or you can enter the desired static value so the port number is fixed."
+    ::= { saMtaDevice 56 }
+
+saMtaDnsBaseTimeout OBJECT-TYPE
+    SYNTAX      Unsigned32 (100..30000)
+    UNITS       "milliseconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object controls the base timeout value for DNS queries.  
+         The DNS client DNS query times out due to no response from the DNS 
+         server.  The EMTA DNS resolver waits this period of time before sending
+         the next DNS Query if no response is received from the DNS server.  
+         This is exponentially increased on subsequent DNS queries for the same
+         transaction."
+    DEFVAL {500}
+    ::= { saMtaDevice 57 }
+
+saMtaDevLCSSignalingSupport OBJECT-TYPE
+	SYNTAX INTEGER {
+		enabled(1),
+		disabled(2)
+	}
+	MAX-ACCESS	read-write
+	STATUS		current
+	DESCRIPTION
+		" This object controls the LCS Signaling.
+		Setting this object to enabled(1) causes MTA to use LCS Signaling.
+		MTA will generate RTP on-hook event packets in the media stream until
+		off-hook is detected or the connection is deleted. Even MTA address
+		flash hook as seperate on-hook and off-hook events and send
+		each event triple redundantly, replacing voice packets in the RTP stream.
+		
+		MTA will not use LCS Signaling if this object is set to disabled(2)"
+		                    
+	DEFVAL { 0 }
+	::= { saMtaDevice 58 }
+	
+saMtaDevSignalingPlayZeroDurationPkt OBJECT-TYPE
+	SYNTAX TruthValue
+	MAX-ACCESS	read-write
+	STATUS		current
+	DESCRIPTION
+		" This object configures whether an endpoint should transmit a DTMF
+       telephone-event packet containing a duration field of value zero.  
+       If this object is set to false, MTA will ignore the DTMF packet which
+       has a duration coded to zero.
+       If this object is set to true, MTA shall not ignore the packet and
+       shall continue playing the tone until an explicit end of tone conditions
+       occurs.  End of Tone conditions occur when Tone has been played for at 
+	   least 50 milliseconds and when either of the following conditions
+       occurs:  an explicit end of tone packet has been received, tone has
+       exceeded 100 milliseconds, or the packet for start of another tone
+       has arrived.
+       Note that the default value of the object may change based on
+       build specific options."
+                    
+	DEFVAL { false }
+	::= { saMtaDevice 59 }	
+
+-- ==========================
+-- ENDPOINT TABLE STARTS HERE
+-- ==========================
+
+saMtaEndPointTable   OBJECT-TYPE
+    SYNTAX        SEQUENCE OF SaMtaEndPointEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+       "This table describes the MTA EndPoint
+        Volume configuration. "
+   ::=  { saMta 2 }
+
+saMtaEndPointEntry  OBJECT-TYPE
+    SYNTAX        SaMtaEndPointEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        " List of attributes for a single MTA endpoint interface."
+    INDEX { ifIndex }
+    ::= { saMtaEndPointTable 1 }
+
+SaMtaEndPointEntry  ::= SEQUENCE {
+    saMtaEndPntHookFlashMinTime         INTEGER,
+    saMtaEndPntHookFlashMaxTime         INTEGER,
+    saMtaEndPntPulseDialing             INTEGER,
+    saMtaEndPntTxGain                   SnmpAdminString,
+    saMtaEndPntRxGain                   SnmpAdminString,
+    saMtaEndPntStatePhysical            INTEGER,
+    saMtaEndPntStateLogical             INTEGER,
+    saMtaEndPntCtrlAlarmPanelAndPosTerminalDetection INTEGER,
+    saMtaEndPntQuarantineEvents         OCTET STRING,
+    saMtaEndPntLedVmwiBehavior          INTEGER,
+    saMtaEndPntQuarantineState          INTEGER,
+    saMtaEndPntCtlToneDetectionCtl		BITS,
+    saMtaEndPntCtrlCustomCWCIDCfg 		INTEGER,
+    saMtaEndPntCtrlCASLevelCfg 			Integer32, 
+    saMtaEndPntCtrlOffhookCIDFSKLevelCfg Integer32
+     
+    }
+
+saMtaEndPntHookFlashMinTime OBJECT-TYPE
+    SYNTAX INTEGER (40..2000)
+    UNITS         "milliseconds"
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "Shortest onhook time at which hook-flash event will be detected, in miliseconds.
+         Breaks in loop current with shorter duration are assumed to be noise and are ignored."
+    ::= { saMtaEndPointEntry 1 }
+
+saMtaEndPntHookFlashMaxTime OBJECT-TYPE
+    SYNTAX INTEGER (100..2000)
+    UNITS           "milliseconds"
+    MAX-ACCESS      read-write
+    STATUS          current
+    DESCRIPTION
+        "Longest onhook time at which hook-flash event will be detected, 
+         in miliseconds. If onhook time is longer then saMtaHookFlashMaxTime, 
+         hang up event will be detected."
+    ::= { saMtaEndPointEntry 2 }
+
+saMtaEndPntPulseDialing OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1),
+        convertToDtmf(2)
+    }
+    MAX-ACCESS 	  read-write
+    STATUS        current
+    DESCRIPTION	
+        "Dial Pulse Detection.
+         0:  Disable(Default)
+         1:  Enable
+         2:  Enable and convert to DTMF tones
+    Note:  Equivalent of VSIF 68."
+    DEFVAL { 0 }
+    ::= { saMtaEndPointEntry 3 }
+
+saMtaEndPntTxGain    OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    UNITS         "dB"
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "Set the audio gain in the MTA->phone direction. This is an absolute level.
+         The operational range is -12.0 dB to +12.0 dB offset with reference to default gain
+         NOTE : Ensure that the Absolute gain in the A/D path is < 0 dB to make sure that you 
+                do not operate the gain in a range where echo canceller problems will result.
+                If there is not enough loss in the D/A + A/D path then the echo will be too 
+                loud for the echo canceller to handle"
+    ::= { saMtaEndPointEntry 4 }
+
+saMtaEndPntRxGain    OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    UNITS         "dB"
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "Set the audio gain in the phone->MTA direction. This is an absolute level.
+         The operational range is -12.0 dB to +12.0 dB offset with reference to default gain
+         NOTE : Ensure that the Absolute gain in the D/A path is < -3dB to make sure that you 
+                do not operate the gain in a range where echo canceller problems will result.
+                If there is not enough loss in the D/A + A/D path then the echo will be too 
+                loud for the echo canceller to handle"
+    ::= { saMtaEndPointEntry 5 }
+
+saMtaEndPntStatePhysical OBJECT-TYPE
+    SYNTAX INTEGER {
+        notApplicable(0),
+        onHook(1),
+        offHook(2)
+    }
+    MAX-ACCESS 	  read-only
+    STATUS        current
+    DESCRIPTION	
+        "Returns the physical state of the end point.
+         0: Line is either administratively down or not provisioned. 
+         1: No phones attached or one or more phones are attached and 
+            on-hook 
+         2: One or more phones are attached and off-hook" 
+    ::= { saMtaEndPointEntry 6 }
+
+saMtaEndPntStateLogical  OBJECT-TYPE 
+    SYNTAX INTEGER { 
+        connectedIdle(1), 
+        disconnected(2),
+        inCallVoice(3),
+        inCallData(4)
+    } 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION 
+        "Returns the logical state of the end point. 
+         1: endpoint is connected to CMS and not in call
+         2: endpoint is not connected to CMS
+         3: endpoint is in voice mode call
+         4: endpoint is in data mode (fax/modem) call"
+    ::= {  saMtaEndPointEntry 7 } 
+
+saMtaEndPntCtrlAlarmPanelAndPosTerminalDetection OBJECT-TYPE
+    SYNTAX INTEGER {
+        enabled(1),
+        disabled(2)
+        }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This MIB object is used to configure the Alarm Panel And Point of Sale (POS) 
+         terminal detection feature on an MTA endpoint. 
+         The detection includes tones that are commonly used by various alarm panels 
+         or POS terminals, such as (but not limited to):
+         - Bell 103 1275Hz (originating station mark tone), 
+         - Bell 103 2225Hz (answering station mark tone), 
+         - V.22bis 2250Hz answer tone
+         When set to true, the MTA enables the detection of these tones on 
+         the specific endpoint. 
+         When set to false, the MTA disables the detection of these tones on
+         the specific endpoint.
+         If a connection already exists on the endpoint when this MIB Object is 
+         modified, then the setting needs to take effect on the next connection. The ECAN and NLP will be OFF and jitter buffer locked"
+    DEFVAL { 1 }
+    ::= { saMtaEndPointEntry 8 }
+
+saMtaEndPntQuarantineEvents OBJECT-TYPE
+    SYNTAX OCTET STRING 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This will read the events that are in MTA quarantine buffer.
+         This is equivalent to the events displayed in epinfo CLI command."
+    ::= { saMtaEndPointEntry  9 }
+
+saMtaEndPntLedVmwiBehavior OBJECT-TYPE
+    SYNTAX INTEGER { 
+        normal(0), 
+        blinking(1)
+    } 
+    MAX-ACCESS read-write  
+    STATUS current  
+    DESCRIPTION  
+        "This MIB object controls the functionality of the TEL LED for each
+          endpoint to indicate the status Message Waiting status of that 
+          endpoint as set by the most recent MGCP/NCS S: vmwi(+/-) signal."
+    DEFVAL { 0 }        
+    ::= { saMtaEndPointEntry 10 }
+
+saMtaEndPntQuarantineState OBJECT-TYPE
+    SYNTAX INTEGER {
+        normal(1),
+        notification(2),
+        lockstep(3),
+        extendedlockstep(4)
+        }
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "This MIB object reads the state of the endpoint during call processing.
+         When the EMTA  enters lockstep mode for more than 2 mins, it will
+         switch to Extended lockstep state"
+    ::= { saMtaEndPointEntry 11 }   
+    
+saMtaEndPntCtlToneDetectionCtl OBJECT-TYPE
+    SYNTAX BITS {
+        faxDetectionDisabled(0),
+        modemDetectionDisabled(1),
+        v18BaudotDisabled(2),
+        v18PreambleDissabled(3),
+        v18AsciiBell103V22bisDisabled(4)
+    }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This MIB object is used to control individual tone detectors on an EMTA
+         endpoint.         
+         If bit faxDetectionDisabled(0) is set, the EMTA must disable the fax
+         portion of tone detection (1100Hz CNG tone) on the specific endpoint.  
+          If bit modemDetectionDisabled(1) is set, the EMTA must disable the modem
+         portion of tone detection (2100Hz CED tone) on the specific endpoint.  
+          If bit V18BaudotDisabled(2) is set, the EMTA must disable V18 Baudot (1400 Hz)
+         detection on the specific endpoint.
+          If bit V18PreambleDisabled(3) is set, the EMTA must disable V18 Preamble
+         (980, 1650 Hz) detection on the specific endpoint.
+          If bit V18AsciiBell103V22bisDisabled(4) is set, the EMTA must disable V18 
+         Ascii/Bell103 (1275, 2225 Hz) and V22bis (2250 Hz) detection on the 
+         specific endpoint (mostly used for Alarm Panels and Point of Sale terminals).
+          If a connection already exists on the endpoint when this MIB Object is 
+         modified, then the setting needs to take effect on the next connection.
+          The default value of this object corresponds to the functionality compliant
+         with the PacketCable requirements, which is V18AsciiBell103V22bisDisabled(4)
+         bit set.  
+          Note that disabling any detector other than V18AsciiBell103V22bisDisabled(4)
+         would make the EMTA non compliant with the PacketCable requirements"
+         
+         DEFVAL { 4 }
+
+
+::= { saMtaEndPointEntry 12 }
+    
+    
+    
+    
+    saMtaEndPntCtrlCustomCWCIDCfg OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object controls whether MTA uses user-defined values for CAS tone
+        and FSK signal for Call Waiting Caller ID.
+        When set to 'true(1)', user-defined values for CAS tone (as specified in
+        saMtaEndPntCtrlCASLevelCfg) and FSK signal (as specified in
+        saMtaEndPntCtrlFSKLeveCfg) will be used.  
+        When set to 'false(2)', values defined in Telcordia GR-30 will be used."
+    DEFVAL {false}
+    ::= { saMtaEndPointEntry 13 }
+
+saMtaEndPntCtrlCASLevelCfg OBJECT-TYPE
+    SYNTAX Integer32 (-150..30)
+    UNITS "TenthdBm"
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This Object controls the user-defined level of the CPE Alerting Signal 
+        (CAS) during Call Waiting Caller ID delivery procedure.  In order for 
+        this object to take effect, the saMtaEndPntCtrlCustomCWCIDCfg
+        object must be set to true(1).
+        This object must be changed in increments and decrements of 5 TenthdB.
+        An attempt to set this object to a value that does not fall on the 
+        increment boundaries will result in an 'inconsistent value' error."
+    DEFVAL { -150 }
+    ::= { saMtaEndPointEntry 14 }
+
+saMtaEndPntCtrlOffhookCIDFSKLevelCfg OBJECT-TYPE
+    SYNTAX Integer32 (-150..30)
+    UNITS "TenthdBm"
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "This Object controls the user-defined level of the FSK data transmission
+        during Call Waiting Caller ID delivery procedure.  In order for this object
+        to take effect, the saMtaEndPntCtrlCustomCWCIDCfg objects must
+        be set to true(1).
+        This object must be changed in increments and decrements of 5 TenthdB.
+        An attempt to set this object to a value that does not fall on the 
+        increment boundaries will result in an 'inconsistent value' error."
+    DEFVAL { -150 }
+    ::= { saMtaEndPointEntry 15 }
+
+    
+
+
+-- MTA Testing, in the MTA MIB file. Index is ifIndex of voice port.
+-- Tests are:
+
+-- resTipToGroundShortDetection(0) - This test measures the resistance
+-- between the Tip pin and the Ground of the MTA. If the resistance is
+-- less that 10K it is declared a fault and the test fails.
+ 
+-- resRingToGroundShortDetection(1) - This test measures the resistance
+-- between the Ring pin and the Ground of the MTA. If the resistance is
+-- less that 10K it is declared a fault and the test fails.
+
+-- resTipToRingShortDetection(2) - This test measures the resistance
+-- between the Tip pin and the Ring Pin. If the resistance is less that
+-- 10K it is declared a fault and the test fails.
+
+-- resRingerEquivalenceNetwork(3) - This test measures the load on the
+-- line. This represents the total AC load of all of the phones, fax
+-- machines, etc. attached to the line. This is measured in the units of
+-- RENs. If the load is less than 0.175 RENs or greater than 5.0 RENs
+-- the test fails.
+
+-- resSelfTestNoReboot(4) - General test of the DSP, APM, HVG. Tests
+-- verify that an endpoint is operational.
+
+-- resOffHookSimulationTest(5) - The phone is taken offhook for 2 seconds
+-- and then placed onhook through internal hardware. If the offhook
+-- condition is detected, relayed to the CMS, and a request to play
+-- dialtone is received from the CMS the test passes. Otherwise the test
+-- fails.
+
+-- resTip1ToRing2Short(6) - Not Implemented. Running this test will
+-- always result in the VALID bits for this test being set to 0 indicating
+-- that the test was not successful or supported.
+
+-- resTip2ToRing1Short(7) - Not Implemented. Running this test will
+-- always result in the VALID bits for this test being set to 0 indicating
+-- that the test was not successful or supported.
+
+-- resHazardousPotentialsTest(8) - This test measures the voltage at Tip
+-- and Ring. If either voltage exceeds a high voltage threshold then the
+-- test fails otherwise the test passes.
+
+-- resForeignElectromotiveForceTest(9) - This test measures the voltage at
+-- Tip and Ring. If either voltage exceeds a lower voltage threshold (6V)
+-- then the test fails otherwise the test passes.
+
+-- resReceiverOffhook(10) - This test is designed to test if a Tip to Ring
+-- resistive fault is actually an offhook phone and not a resistive fault.
+-- If the phone is not offhook then this test passes. This test only makes
+-- sense to run if the Tip to Ring resistive fault is detected.
+
+saMtaTestBase   OBJECT IDENTIFIER ::=  { saMta 3 }
+
+saMtaTestEndPntTable   OBJECT-TYPE
+    SYNTAX        SEQUENCE OF SaMtaTestEndPntEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+       "This table controls the loopback mode for each endpoint present on the eMTA."
+   ::=  { saMtaTestBase 1 }
+
+saMtaTestEndPntEntry  OBJECT-TYPE
+    SYNTAX        SaMtaTestEndPntEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "Each entry controls the loopback mode for the particular endpoint indexed 
+        by the corresponding ifIndex."
+    INDEX { ifIndex }
+    ::= { saMtaTestEndPntTable 1 }
+
+SaMtaTestEndPntEntry  ::= SEQUENCE {
+       saMtaTestEndPntAnalogLoopback     TruthValue,
+       saMtaTestEndPntLineReset          TruthValue,
+       saMtaTestEndPntDiagTestsStart     BITS,
+       saMtaTestEndPntDiagTestsStop      BITS,
+       saMtaTestEndPntDiagTestValid      BITS,
+       saMtaTestEndPntDiagTestResult     BITS,
+       saMtaTestEndPntDiagTestValue      SnmpAdminString
+       }
+
+saMtaTestEndPntAnalogLoopback OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This oject controls the implementation of the analog loopback by the MTA.
+        When the object is set to true(1), the MTA starts an analog loopback 
+        operations to the network. When the object is set to false(2), the MTA stops loopback
+        operations immediately.
+        The default value of this object corresponds to the functionality compliant 
+        with the PacketCable requirements."
+    DEFVAL {false}
+    ::= { saMtaTestEndPntEntry 1 }
+
+saMtaTestEndPntLineReset OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Setting this object to true(1) causes the eMTA to reset the telephone line
+        of the corresponding endpoint and drop loop voltage for 2 seconds.
+        Setting this object to false(2) does not have 
+        any affect. Reading this object always returns 'false(2)'."
+    DEFVAL {false}
+    ::= { saMtaTestEndPntEntry 2 }
+
+saMtaTestEndPntDiagTestsStart    OBJECT-TYPE
+    SYNTAX BITS {
+       startTipToGroundShortDetection(0),
+       startRingToGroundShortDetection(1),
+       startTipToRingShortDetection(2),
+       startRingerEquivalenceNetwork(3),
+       startSelfTestNoReboot(4),
+       startOffHookSimulationTest(5),
+       startTip1ToRing2Short(6),     -- FUTURE
+       startTip2ToRing1Short(7),      -- FUTURE
+       startHazardousPotentialsTest(8),
+       startForeignElectromotiveForceTest(9),
+       startReceiverOffhook(10),
+       startForceTestExecution(15)
+    }
+    MAX-ACCESS     read-write
+    STATUS         current
+    DESCRIPTION
+        "This MIB object is used to start one or more diagnostic tests 
+        associated with a corresponding endpoint.
+        Thus, whenever one or more BITS corresponding to diagnostic test
+        are set to a value of '1', the MTA MUST start those tests. 
+        Before starting the test, the MTA MUST clear the BITS of the 
+        objects 'saMtaTestEndPntDiagTestValid', 
+        'saMtaTestEndPntDiagTestResult', and 
+        'saMtaTestEndPntDiagTestsStop'.
+        Once the tests are executed, the MTA MUST:
+            - set the corresponding bits to a value of '0'
+            - update the corresponding BITS in the MIB Objects 
+        'saMtaTestEndPntDiagTestValid' and 
+        'saMtaTestEndPntDiagTestResult'.
+        Whenever a test is being run on an enpoint the MTA MUST 
+        set the corresponding 'ifOperStatus' MIB Object to a value of 
+        'testing(3)' for the whole duration of the test. 
+        When the test is completed, the MTA MUST set the 
+        ifOperStatus to the value corresponding to the current state of the line.
+        The selected tests will not run if the corresponding endpoint is offhook.
+        To force execution of the selected tests regardless of the endpoint status
+        set the corresponding startForceTestExecution(31) BIT."
+       ::= { saMtaTestEndPntEntry 3}
+
+saMtaTestEndPntDiagTestsStop    OBJECT-TYPE
+    SYNTAX BITS {
+       stopTipToGroundShortDetection(0),
+       stopRingToGroundShortDetection(1),
+       stopTipToRingShortDetection(2),
+       stopRingerEquivalenceNetwork(3),
+       stopSelfTestNoReboot(4),
+       stopOffHookSimulationTest(5),
+       stopTip1ToRing2Short(6),      -- FUTURE
+       stopTip2ToRing1Short(7),      -- FUTURE
+       stopHazardousPotentialsTest(8),
+       stopForeignElectromotiveForceTest(9),
+       stopReceiverOffhook(10)
+    }
+    MAX-ACCESS     read-write
+    STATUS         current
+    DESCRIPTION
+        "This MIB object is used to stop the test corresponding to the 
+        bit being set if the test is not complete yet by the time when 
+        the the bit is set."
+       ::= { saMtaTestEndPntEntry 4}
+
+saMtaTestEndPntDiagTestValid  OBJECT-TYPE
+    SYNTAX BITS {
+       validTipToGroundShortDetection(0),
+       validRingToGroundShortDetection(1),
+       validTipToRingShortDetection(2),
+       validRingerEquivalenceNetwork(3),
+       validSelfTestNoReboot(4),
+       validOffHookSimulationTest(5),
+       validTip1ToRing2Short(6),      -- FUTURE
+       validTip2ToRing1Short(7),      -- FUTURE
+       validHazardousPotentialsTest(8),
+       validForeignElectromotiveForceTest(9),
+       validReceiverOffhook(10)
+    }
+    MAX-ACCESS     read-only
+    STATUS         current
+    DESCRIPTION
+        "This MIB object is used to indicate the validity of the 
+        corresponding test case that was initiated using the MIB
+        Object 'saMtaTestEndPntDiagTestsStart'.
+        An MTA MUST:
+            - set corresponding bit if the MTA was able to run the test,
+              and the test result is valid.
+            - clear a corresponding bit if the MTA was not able to run the test,
+              or the test was not initiated, or the test was not complete for any reason
+              and, hence, the result is invalid."
+       ::= { saMtaTestEndPntEntry 5}
+
+saMtaTestEndPntDiagTestResult  OBJECT-TYPE
+    SYNTAX BITS {
+       resTipToGroundShortDetection(0),
+       resRingToGroundShortDetection(1),
+       resTipToRingShortDetection(2),
+       resRingerEquivalenceNetwork(3),
+       resSelfTestNoReboot(4),
+       resOffHookSimulationTest(5),
+       resTip1ToRing2Short(6),     -- FUTURE
+       resTip2ToRing1Short(7),     -- FUTURE
+       resHazardousPotentialsTest(8),
+       resForeignElectromotiveForceTest(9),
+       resReceiverOffhook(10)
+    }
+    MAX-ACCESS     read-only
+    STATUS         current
+    DESCRIPTION
+        "This MIB object is used to indicate the result of the corresponding
+        test that was initiated using the MIB Object 'saMtaTestEndPntDiagTestsStart'.
+        An MTA MUST:
+            - set the bit if the corresponding test completed successfully.
+            - clear the bit if the corresponding test completed and failed the test."
+       ::= { saMtaTestEndPntEntry 6}
+
+saMtaTestEndPntDiagTestValue  OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS     read-only
+    STATUS         current
+    DESCRIPTION
+        "This MIB object contains the value which represents the results of the 
+        corresponding test. Each value of the result is represented as a human 
+        readable string inicating the value of the particular parameter used to 
+        evaluate the testing results. 
+        The format of the string with the value is as follows:
+           [P=<param>,V=<value>,U=<unit>]
+        where: 
+        <param> - is the name of the particular parameter evaluated during the test,
+        <vaule> - is the human readable representation of the testing result 
+        of the particular parameter (e.g. '3.5', 'state is on-hook', etc),
+        <unit> - is the human readable representation of the unit describing the 
+        <value>.
+        If there are several parameters constituting the result of the individual test, 
+        then all values must be presented in the MIB Object in the following format:
+           [P=<param-1>,V=<value-1>,U=<unit-1>][P=<param-2>,V=<value-2>,U=<unit-2>].....
+        If the test is not represented by the measurable value, or the test has not
+        been complete for any reason, then the object contains a zero-length string."
+       ::= { saMtaTestEndPntEntry 7}
+       
+
+saMtaTestFEMFOnBoot OBJECT-TYPE
+   SYNTAX INTEGER 
+   UNITS	"seconds"
+   MAX-ACCESS read-write
+   STATUS  current
+   DESCRIPTION         
+       "Defines the number of seconds the  LED will blink after the Line diag tests fails
+       0: disabled
+       1: enabled
+       30-3600 : seconds after which it will stop blinking the LED.
+       
+       This setting enables or disables the automatic test for Foreign Electromotive force at boot time.
+       A value of '0'disables the test at boot time. 
+       '1' enables the test to run at boot time and and allows all LEDs to blink if FEMF is detected 
+       until the unit is rebooted. 
+       Values from 30 to 3600 enable the test to run at boot and allows all LEDs to blink
+       if FEMF is detected until the provisioned time value in seconds expires.  
+              If the test does NOT detect FEMF or the provisioned time expires then LEDs will operate normally "
+      DEFVAL {1}
+   ::= { saMtaTestBase 2}
+
+ 
+
+saMtaTestFEMFMode OBJECT-TYPE
+
+    SYNTAX INTEGER {        
+        other-line-Enabled-during-test (0),
+        other-line-Disabled-during-test(1)         
+    }
+
+    MAX-ACCESS read-write
+    STATUS  current
+    DESCRIPTION
+
+        "This setting provisions the device to enable or disable other phone line(s) when running
+
+        the Foreign Electromotive Force test.  Enabling the other phone line(s) during the test can
+
+        detect phone line cross-connections between phone lines, but some 2 line telephones have
+
+        sufficient electrical leakage between lines that false FEMF may be detected if other line(s)
+
+        are enabled during the test"
+
+     DEFVAL {1}
+
+     ::= { saMtaTestBase 3}
+
+
+
+END

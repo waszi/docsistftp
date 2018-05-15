@@ -1,0 +1,1410 @@
+--**************************************************************************
+--                                                                          
+--    Copyright 2011 Cisco Systems, Inc.
+--    All Rights Reserved                                                   
+--    No portions of this material may be reproduced in any
+--    form without the written permission of:                                                
+--        Cisco Systems, Inc.
+--        170 West Tasman Dr.
+--        San Jose, CA 95134
+--        USA
+--                                                 
+--**************************************************************************
+
+SA-MTA-STAT-MIB DEFINITIONS ::= BEGIN
+IMPORTS
+        MODULE-IDENTITY, 
+        OBJECT-TYPE,enterprises, 
+        Integer32,
+        Unsigned32
+                FROM SNMPv2-SMI
+        ifIndex
+                FROM IF-MIB
+        SnmpAdminString 
+                FROM SNMP-FRAMEWORK-MIB 
+        InetPortNumber
+                FROM INET-ADDRESS-MIB 
+        TruthValue,DisplayString,
+        DateAndTime 
+                FROM SNMPv2-TC 
+        saMtaEndPntStateLogical
+                FROM SA-MTA-MIB ;
+                
+sa           OBJECT IDENTIFIER ::= { enterprises 1429 }
+saVoip       OBJECT IDENTIFIER ::= { sa 78 }
+
+saMta   MODULE-IDENTITY
+        LAST-UPDATED    "201107140000Z"
+        ORGANIZATION    "Cisco Systems, Inc."
+        CONTACT-INFO    "http://support.cisco.com"
+        DESCRIPTION
+            "Various MTA statistics."
+
+      -- History 
+	REVISION 	"201107140000Z"
+      DESCRIPTION 
+			"Added 'saMtaCallStatDialedHash' MIB -- CR 17119
+			Updated Copyright and Contact Info"
+			
+	REVISION 	"201105040000Z"
+      DESCRIPTION 
+			"Replaced 'saMtaCallStatLast24HrsIndex' with 'ifIndex' in saMtaCallStatLast24HrsTable
+			Compile would fail in BACC prove server with old Index Settings -- CR 18115
+			Updated Copyright for 2011 and Contact Info"	
+
+
+	REVISION 	"201007120000Z"
+      DESCRIPTION 
+			"Added Cisco Copyright, corrected Revision Dates to use YYYYMMDDHHMMZ format,
+			 Added CR reference for VOIP Call metrics table changes" 
+      
+	REVISION 	"201005260000Z"
+      DESCRIPTION 
+			"Added saCallVoipMetricsIndex and saCallVoipMetricsCallTrace
+			 to SaMtaCallVoipMetricsEntry (4609)"   
+        
+      REVISION	"201005180000Z"
+      DESCRIPTION
+      		"Added VOIP Call metrics table (4609)"
+        
+	  REVISION	"201003160000Z"
+	  DESCRIPTION
+			"Modified the description for saMtaCallStatLast10DialedNumber (15460)"
+
+        REVISION	"200801180000Z"
+        DESCRIPTION
+			"Added saMtaSendLogQuarantineState (2218)
+			 Added saMtaStatsTrapQuarantineState (2218)
+			 Added saMtaCallStatLast24HrsTable (2205)"
+
+        REVISION	"200603170000Z"
+        DESCRIPTION
+			"Changed saMtaStatSendLogMethod description
+			 Changed saMtaSendLogIpAddress description
+			 Added saMtaStatsTrapCliAccessLoginGood
+			 Added saMtaStatsTrapCliAccessLoginBad
+			 Added saMtaStatDevLog tree
+			 Added saMtaStatDevLogMethod
+			 Added saMtaStatDevLogIpAddress
+			 Added saMtaStatDevLogCliAccess"
+
+
+        REVISION	"200602060000Z"  -- 2006/02/06
+        DESCRIPTION
+			"Changed SYNTAX to DateAndTime for
+			 saMtaCallStatStartTime
+			 saMtaCallStatLast10StartTime
+			 Added saMtaCallStatLastMessageReceived
+			 Added saMtaCallStatLastMessageSent
+			 Added saMtaCallStatLast10Index
+			 Added saMtaTotalCalls
+			 Added saMtaStatsTrap tree"
+
+        REVISION	"200510110000Z"  -- 2005/10/11
+        DESCRIPTION
+			"Initial release"
+
+        ::= { saVoip 3 }
+
+PktcCodecType     ::= TEXTUAL-CONVENTION
+      STATUS       current
+      DESCRIPTION 
+           	"Textual Convention defines various types of 
+            CODECs that MAY be supported.   The list of CODECs 
+            MUST be consistent with the Codec RTP MAP Parameters
+            Table in the PacketCable CODEC specification.  In-line 
+            embedded comments below contain the Literal Codec Name  
+            for each CODEC. The Literal Codec Name corresponds to 
+            the second column of the Codec RTP MAP Parameters Table. 
+            The Literal Codec Name Column contains the CODEC name 
+            that is used in the LCD of the NCS messages CRCX/MDCX, 
+            and is also used to identify the CODEC in the CMS 
+            Provisioning Specification. The RTP Map Parameter 
+            Column of the Codec RTP MAP Parameters Table contains
+            the string used in the media attribute line ('a=') of the 
+            SDP parameters in NCS messages."
+      REFERENCE 
+            "PacketCable CODEC Specification"
+      SYNTAX INTEGER {
+            other    (1),
+            unknown  (2),
+            g729     (3),  -- G729
+            reserved (4),  -- reserved for future use
+            g729E    (5),  -- G729E 
+            pcmu     (6),  -- PCMU
+            g726at32 (7),  -- G726-32
+            g728     (8),  -- G728
+            pcma     (9),  -- PCMA
+            g726at16 (10), -- G726-16
+            g726at24 (11), -- G726-24
+            g726at40 (12)  -- G726-40
+            }
+
+-- MTA Device
+saMtaStatsBase   OBJECT IDENTIFIER ::=  { saMta 4 }
+
+saMtaCallStatCurrentTable OBJECT-TYPE
+    SYNTAX        SEQUENCE OF SaMtaCallStatCurrentEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+       "This table contains current call (if active) statistics."
+   ::=  { saMtaStatsBase 1 }
+   
+   
+saMtaCallStatCurrentEntry  OBJECT-TYPE
+    SYNTAX        SaMtaCallStatCurrentEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "List of individual parameters for a single call."
+    INDEX { ifIndex }
+    ::= { saMtaCallStatCurrentTable 1 }   
+        
+SaMtaCallStatCurrentEntry  ::= SEQUENCE {
+    saMtaCallStatStatus                     INTEGER,
+    saMtaCallStatStartTime                  DateAndTime,
+    saMtaCallStatDuration                   Integer32,
+    saMtaCallStatDirection                  INTEGER,
+    saMtaCallStatDialedNumber               SnmpAdminString,
+    saMtaCallStatUdpPort                    InetPortNumber,
+    saMtaCallStatRemoteIp                   IpAddress,
+    saMtaCallStatRemoteUdpPort              InetPortNumber,
+    saMtaCallStatPacketization              INTEGER,
+    saMtaCallStatCodec                      PktcCodecType,
+    saMtaCallStatSilentSuppression          TruthValue,
+    saMtaCallStatEchoCanceller              TruthValue,
+    saMtaCallStatPacketsSent                Integer32, 
+    saMtaCallStatOctetsSent                 Integer32,
+    saMtaCallStatPacketsReceived            Integer32, 
+    saMtaCallStatOctetsReceived             Integer32,
+    saMtaCallStatPacketsLost                Integer32, 
+    saMtaCallStatJitter                     Integer32,
+    saMtaCallStatLatency                    Integer32,
+    saMtaCallStatRemotePacketsSent          Integer32, 
+    saMtaCallStatRemoteOctetsSent           Integer32, 
+    saMtaCallStatRemotePacketLoss           Integer32, 
+    saMtaCallStatRemoteJitter               Integer32,
+    saMtaCallStatBufferUnderruns            Integer32,
+    saMtaCallStatBufferOverruns             Integer32,
+    saMtaCallStatJitterBufferSize           Integer32,
+    saMtaCallStatLastMessageReceived        SnmpAdminString,
+    saMtaCallStatLastMessageSent            SnmpAdminString
+    }     
+    
+       
+saMtaCallStatStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        inactive(0),
+        active(1)
+        } 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Shows if an endpoint is in use (offhook)."
+    ::= { saMtaCallStatCurrentEntry 1 }
+
+saMtaCallStatStartTime OBJECT-TYPE
+    SYNTAX DateAndTime 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+         "Time the call was connected."
+    ::= { saMtaCallStatCurrentEntry 2 }
+
+saMtaCallStatDuration OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "seconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Duration of the call."
+    ::= { saMtaCallStatCurrentEntry 3 }
+
+saMtaCallStatDirection OBJECT-TYPE
+    SYNTAX INTEGER 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Call origination direction:
+         1: from the MTA
+         2: to the MTA"
+    ::= { saMtaCallStatCurrentEntry 4 }
+
+saMtaCallStatDialedNumber OBJECT-TYPE
+    SYNTAX SnmpAdminString 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The phone number that was dialed.
+         If incoming call or V5.2 interface, this is empty."
+    ::= { saMtaCallStatCurrentEntry 5 }
+
+saMtaCallStatUdpPort OBJECT-TYPE
+    SYNTAX InetPortNumber 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Local UDP port for RTP stream."
+    ::= { saMtaCallStatCurrentEntry 6 }
+
+saMtaCallStatRemoteIp OBJECT-TYPE
+    SYNTAX IpAddress 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "IP address of the remote end for RTP stream."
+    ::= { saMtaCallStatCurrentEntry 7 }
+
+saMtaCallStatRemoteUdpPort OBJECT-TYPE
+    SYNTAX InetPortNumber 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "UDP port of the remote end for RTP stream."
+    ::= { saMtaCallStatCurrentEntry 8 }
+
+saMtaCallStatPacketization OBJECT-TYPE
+    SYNTAX INTEGER 
+    UNITS  "milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Packetization period."
+    ::= { saMtaCallStatCurrentEntry 9 }
+
+saMtaCallStatCodec OBJECT-TYPE
+    SYNTAX PktcCodecType
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Codec used for the call."
+    ::= { saMtaCallStatCurrentEntry 10 }  
+ 
+ saMtaCallStatSilentSuppression OBJECT-TYPE
+    SYNTAX TruthValue 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Silent suppression."
+    ::= { saMtaCallStatCurrentEntry 11 }
+
+saMtaCallStatEchoCanceller OBJECT-TYPE
+    SYNTAX TruthValue 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Echo Cancellation."
+    ::= { saMtaCallStatCurrentEntry 12 }
+
+saMtaCallStatPacketsSent OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "packets"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of packets that were sent on the connection."
+    ::= { saMtaCallStatCurrentEntry 13 }
+
+saMtaCallStatOctetsSent OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "bytes"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of octets that were sent on the connection."
+    ::= { saMtaCallStatCurrentEntry 14 }
+
+saMtaCallStatPacketsReceived OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "packets"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of packets that were received on the connection."
+    ::= { saMtaCallStatCurrentEntry 15 }
+
+saMtaCallStatOctetsReceived OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "bytes"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of octets that were received on the connection."
+    ::= { saMtaCallStatCurrentEntry 16 }
+
+saMtaCallStatPacketsLost OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "packets"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of packets that were not received on the connection, as
+         deduced from gaps in the sequence number."
+    ::= { saMtaCallStatCurrentEntry 17 }
+
+saMtaCallStatJitter OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The average inter-packet arrival jitter."
+    ::= { saMtaCallStatCurrentEntry 18 }
+
+saMtaCallStatLatency OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Average latency."
+    ::= { saMtaCallStatCurrentEntry 19 }
+
+saMtaCallStatRemotePacketsSent OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "packets"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of packets that were sent on the connection from the
+         perspective of the remote endpoint."
+    ::= { saMtaCallStatCurrentEntry 20 }
+
+saMtaCallStatRemoteOctetsSent OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "bytes"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of octets that were sent on the connection from the
+         perspective of the remote endpoint."
+    ::= { saMtaCallStatCurrentEntry 21 } 
+
+saMtaCallStatRemotePacketLoss OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "packets"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of packets that were not received on the connection, as
+         deduced from gaps in the sequence number from the perspective of the
+         remote endpoint."
+    ::= { saMtaCallStatCurrentEntry 22 }
+
+saMtaCallStatRemoteJitter OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The average inter-packet arrival jitter, from the perspective of
+         the remote endpoint."
+    ::= { saMtaCallStatCurrentEntry 23 }
+
+saMtaCallStatBufferUnderruns OBJECT-TYPE
+    SYNTAX Integer32 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Number of times that buffer was in the underrun state (expected
+         to take packet from the buffer but buffer empty)."
+    ::= { saMtaCallStatCurrentEntry 24 }
+
+saMtaCallStatBufferOverruns OBJECT-TYPE
+    SYNTAX Integer32 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Number of times that buffer overfilled (packet arrived but no space
+         to put it in the buffer)."
+    ::= { saMtaCallStatCurrentEntry 25 }
+
+saMtaCallStatJitterBufferSize OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Size of jitter buffer (as set by saMtaDevJitMaxLen)."
+    ::= { saMtaCallStatCurrentEntry 26 }
+
+saMtaCallStatLastMessageReceived OBJECT-TYPE
+    SYNTAX SnmpAdminString 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Last NCS message received from call agent."
+    ::= { saMtaCallStatCurrentEntry 27 }
+
+saMtaCallStatLastMessageSent OBJECT-TYPE
+    SYNTAX SnmpAdminString 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Last NCS message sent to call agent."
+    ::= { saMtaCallStatCurrentEntry 28 }
+
+
+--  
+-- saMtaCallStatLast10Table
+--
+saMtaCallStatLast10Table   OBJECT-TYPE
+    SYNTAX        SEQUENCE OF SaMtaCallStatLast10Entry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+       "This table contains last 10 calls statistics. The most recent completed call has an index of 1."
+   ::=  { saMtaStatsBase 2 }
+
+
+saMtaCallStatLast10Entry  OBJECT-TYPE
+    SYNTAX        SaMtaCallStatLast10Entry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "List of individual parameters for a single call"
+    INDEX { saMtaCallStatLast10Index }
+    ::= { saMtaCallStatLast10Table 1 }    
+ 
+
+SaMtaCallStatLast10Entry  ::= SEQUENCE {
+    saMtaCallStatLast10Index                      Integer32,
+    saMtaCallStatLast10EndPoint                   INTEGER,
+    saMtaCallStatLast10StartTime                  DateAndTime,
+    saMtaCallStatLast10Duration                   Integer32,
+    saMtaCallStatLast10Direction                  INTEGER,
+    saMtaCallStatLast10DialedNumber               SnmpAdminString,
+    saMtaCallStatLast10UdpPort                    InetPortNumber,
+    saMtaCallStatLast10RemoteIp                   IpAddress,
+    saMtaCallStatLast10RemoteUdpPort              InetPortNumber,
+    saMtaCallStatLast10Packetization              INTEGER,
+    saMtaCallStatLast10Codec                      PktcCodecType,
+    saMtaCallStatLast10SilentSuppression          TruthValue,
+    saMtaCallStatLast10EchoCanceller              TruthValue,
+    saMtaCallStatLast10PacketsSent                Integer32, 
+    saMtaCallStatLast10OctetsSent                 Integer32,
+    saMtaCallStatLast10PacketsReceived            Integer32, 
+    saMtaCallStatLast10OctetsReceived             Integer32,
+    saMtaCallStatLast10PacketsLost                Integer32, 
+    saMtaCallStatLast10Jitter                     Integer32,
+    saMtaCallStatLast10Latency                    Integer32,
+    saMtaCallStatLast10RemotePacketsSent          Integer32, 
+    saMtaCallStatLast10RemoteOctetsSent           Integer32, 
+    saMtaCallStatLast10RemotePacketLoss           Integer32, 
+    saMtaCallStatLast10RemoteJitter               Integer32,
+    saMtaCallStatLast10BufferUnderruns            Integer32,
+    saMtaCallStatLast10BufferOverruns             Integer32,
+    saMtaCallStatLast10JitterBufferSize           Integer32
+    }  
+
+
+saMtaCallStatLast10EndPoint OBJECT-TYPE
+    SYNTAX INTEGER 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Endpoint used for the call."
+    ::= { saMtaCallStatLast10Entry 1 }
+
+saMtaCallStatLast10StartTime OBJECT-TYPE
+    SYNTAX DateAndTime 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+         "Time the call was connected."
+    ::= { saMtaCallStatLast10Entry 2 }
+
+saMtaCallStatLast10Duration OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "seconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Duration of the call."
+    ::= { saMtaCallStatLast10Entry 3 }
+
+saMtaCallStatLast10Direction OBJECT-TYPE
+    SYNTAX INTEGER 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Call origination direction:
+         1: from the MTA
+         2: to the MTA"
+    ::= { saMtaCallStatLast10Entry 4 }
+
+saMtaCallStatLast10DialedNumber OBJECT-TYPE
+    SYNTAX SnmpAdminString 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The phone number that was dialed or calling ( incoming calls).
+         Note: From Darwin-2 ( SIP ) and Nikambu (MGCP )
+	   this MIB will capture calling number for incoming calls."
+    ::= { saMtaCallStatLast10Entry 5 }
+
+saMtaCallStatLast10UdpPort OBJECT-TYPE
+    SYNTAX InetPortNumber 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Local UDP port for RTP stream."
+    ::= { saMtaCallStatLast10Entry 6 }
+
+saMtaCallStatLast10RemoteIp OBJECT-TYPE
+    SYNTAX IpAddress 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "IP address of the remote end for RTP stream."
+    ::= { saMtaCallStatLast10Entry 7 }
+
+saMtaCallStatLast10RemoteUdpPort OBJECT-TYPE
+    SYNTAX InetPortNumber 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "UDP port of the remote end for RTP stream."
+    ::= { saMtaCallStatLast10Entry 8 }
+
+saMtaCallStatLast10Packetization OBJECT-TYPE
+    SYNTAX INTEGER 
+    UNITS  "milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Packetization period."
+    ::= { saMtaCallStatLast10Entry 9 }
+
+saMtaCallStatLast10Codec OBJECT-TYPE
+    SYNTAX PktcCodecType
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Codec used for the call."
+    ::= { saMtaCallStatLast10Entry 10 }  
+ 
+ saMtaCallStatLast10SilentSuppression OBJECT-TYPE
+    SYNTAX TruthValue 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Silent suppression."
+    ::= { saMtaCallStatLast10Entry 11 }
+
+saMtaCallStatLast10EchoCanceller OBJECT-TYPE
+    SYNTAX TruthValue 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Echo Cancellation."
+    ::= { saMtaCallStatLast10Entry 12 }
+
+saMtaCallStatLast10PacketsSent OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "packets"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of packets that were sent on the connection."
+    ::= { saMtaCallStatLast10Entry 13 }
+
+saMtaCallStatLast10OctetsSent OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "bytes"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of octets that were sent on the connection."
+    ::= { saMtaCallStatLast10Entry 14 }
+
+saMtaCallStatLast10PacketsReceived OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "packets"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of packets that were received on the connection."
+    ::= { saMtaCallStatLast10Entry 15 }
+
+saMtaCallStatLast10OctetsReceived OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "bytes"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of octets that were received on the connection."
+    ::= { saMtaCallStatLast10Entry 16 }
+
+saMtaCallStatLast10PacketsLost OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "packets"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of packets that were not received on the connection, as
+         deduced from gaps in the sequence number."
+    ::= { saMtaCallStatLast10Entry 17 }
+
+saMtaCallStatLast10Jitter OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The average inter-packet arrival jitter."
+    ::= { saMtaCallStatLast10Entry 18 }
+
+saMtaCallStatLast10Latency OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Average latency."
+    ::= { saMtaCallStatLast10Entry 19 }
+
+saMtaCallStatLast10RemotePacketsSent OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "packets"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of packets that were sent on the connection from the
+         perspective of the remote endpoint."
+    ::= { saMtaCallStatLast10Entry 20 }
+
+saMtaCallStatLast10RemoteOctetsSent OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "bytes"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of octets that were sent on the connection from the
+         perspective of the remote endpoint."
+    ::= { saMtaCallStatLast10Entry 21 } 
+
+saMtaCallStatLast10RemotePacketLoss OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "packets"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of packets that were not received on the connection, as
+         deduced from gaps in the sequence number from the perspective of the
+         remote endpoint."
+    ::= { saMtaCallStatLast10Entry 22 }
+
+saMtaCallStatLast10RemoteJitter OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The average inter-packet arrival jitter, from the perspective of
+         the remote endpoint."
+    ::= { saMtaCallStatLast10Entry 23 }
+
+saMtaCallStatLast10BufferUnderruns OBJECT-TYPE
+    SYNTAX Integer32 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Number of times that buffer was in the underrun state (expected
+         to take packet from the buffer but buffer empty)."
+    ::= { saMtaCallStatLast10Entry 24 }
+
+saMtaCallStatLast10BufferOverruns OBJECT-TYPE
+    SYNTAX Integer32 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Number of times that buffer overfilled (packet arrived but no space
+         to put it in the buffer)."
+    ::= { saMtaCallStatLast10Entry 25 }
+
+saMtaCallStatLast10JitterBufferSize OBJECT-TYPE
+    SYNTAX Integer32 
+    UNITS  "milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Size of jitter buffer (as set by saMtaDevJitMaxLen)."
+    ::= { saMtaCallStatLast10Entry 26 }
+    
+
+saMtaCallStatLast10Index OBJECT-TYPE
+    SYNTAX Integer32 (1..10) 
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Index of the saMtaCallStatLast10Entry."
+    ::= { saMtaCallStatLast10Entry 27 }
+
+
+-- ================
+-- CUMULATIVE STATS
+-- ================
+
+saMtaCallStatCumulative  OBJECT IDENTIFIER ::= { saMtaStatsBase 3 }
+
+saMtaTotalRtpSent   OBJECT-TYPE
+    SYNTAX Integer32 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total number of RTP packets sent from the device since last reboot."
+    ::= { saMtaCallStatCumulative 1 }
+
+saMtaTotalRtpReceived  OBJECT-TYPE
+    SYNTAX Integer32 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total number of RTP packets sent for the device."
+    ::= { saMtaCallStatCumulative  2 }
+
+saMtaTotalSuccessMessagesSentToCms OBJECT-TYPE
+    SYNTAX Integer32 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total number of successful messages transmitted from the device
+         to the call agent since last reboot."
+    ::= { saMtaCallStatCumulative  3 }
+
+saMtaTotalSuccessMessagesRecvdFromCms OBJECT-TYPE
+    SYNTAX Integer32 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total number of successful messages recieved for the device
+         from the call agent since last reboot."
+    ::= { saMtaCallStatCumulative  4 }
+
+saMtaTotalNegativeAcksSentToCms OBJECT-TYPE
+    SYNTAX Integer32 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total number of negative acknowledgements sent to the call agent
+         since last reboot."
+    ::= { saMtaCallStatCumulative  5 }
+
+saMtaTotalNegativeAcksRecvdFromCms OBJECT-TYPE
+    SYNTAX Integer32  
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total number of negative acknowledgements recieved from
+         the call agent since last reboot."
+    ::= { saMtaCallStatCumulative  6 }
+
+saMtaTotalAcksRecvdFromCmsForNtfy OBJECT-TYPE
+    SYNTAX Integer32  
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Total number of acknowledgements recieved from the call agent
+         for the notifies sent since last reboot."
+    ::= { saMtaCallStatCumulative 7 }
+
+saMtaTotalCalls OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Total number of calls originated and terminated by the MTA since
+         last reboot." 
+    ::= { saMtaCallStatCumulative 8 }
+
+
+
+-- ==================================
+-- SEND SYSLOG OR SNMP TRAP ON EVENTS
+-- ==================================
+
+saMtaStatSendLogTable OBJECT-TYPE
+    SYNTAX        SEQUENCE OF SaMtaStatSendLogEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+       "This table controls sending syslog/traps."
+   ::=  { saMtaStatsBase 4 }
+   
+   
+saMtaStatSendLogEntry  OBJECT-TYPE
+    SYNTAX        SaMtaStatSendLogEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "List of individual parameters for a single call."
+    INDEX { ifIndex }
+    ::= { saMtaStatSendLogTable 1 }   
+        
+SaMtaStatSendLogEntry  ::= SEQUENCE {
+    saMtaStatSendLogMethod      INTEGER,
+    saMtaSendLogIpAddress       IpAddress,
+    saMtaSendLogTotalPackets    Unsigned32,
+    saMtaSendLogProvState       INTEGER,
+    saMtaSendLogCallParams      Unsigned32,
+    saMtaSendLogDisconnect      INTEGER,
+    saMtaSendLogNcsTrace        INTEGER,
+    saMtaSendLogQuarantineState INTEGER
+    }
+
+saMtaStatSendLogMethod OBJECT-TYPE
+    SYNTAX INTEGER  {
+        none(0),
+        syslog(1),
+        trap(2)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Overrides saMtaStatDevLogMethod."
+    DEFVAL { 1 }
+    ::= { saMtaStatSendLogEntry 1 }
+
+saMtaSendLogIpAddress OBJECT-TYPE
+    SYNTAX IpAddress
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "IP address of syslog/trap server.
+         Overrides saMtaStatDevLogIpAddress."
+    ::= { saMtaStatSendLogEntry 2 }
+   
+saMtaSendLogTotalPackets OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "seconds"
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Defines how often to send info on
+         total packets received and sent."
+    DEFVAL { 0 }
+    ::= { saMtaStatSendLogEntry 3 }
+
+saMtaSendLogProvState OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        sendOnChange(1)
+        }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Defines whether to report prov change."
+    DEFVAL { 1 }
+    ::= { saMtaStatSendLogEntry 4 }
+
+saMtaSendLogCallParams OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "seconds"
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Defines how often to send info on
+         jitter, latency and delay from RTCP, measured latency and delay.
+         Note: the info is sent onle when call is active."
+    DEFVAL { 0 }
+    ::= { saMtaStatSendLogEntry 5 }
+
+saMtaSendLogDisconnect OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        sendOnChange(1)
+        }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Defines whether to report connect/disconnect to CMS change."
+    DEFVAL { 1 }
+    ::= { saMtaStatSendLogEntry 6 }
+
+saMtaSendLogNcsTrace OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+        }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Syslog/trap are sent on send/receive NCS messages."
+    DEFVAL { 0 }
+    ::= { saMtaStatSendLogEntry 7 }
+
+saMtaSendLogQuarantineState OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+        }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Syslog/trap are sent when endpoint enters quarantine state."
+    DEFVAL { 0 }
+    ::= { saMtaStatSendLogEntry 8 }
+
+
+-- DEFINE TRAPS HERE
+
+saMtaStatsTrap   OBJECT IDENTIFIER ::=  { saMtaStatsBase 5 }
+
+saMtaStatsTrapTotalPackets NOTIFICATION-TYPE 
+    OBJECTS {
+        saMtaTotalRtpSent,
+        saMtaTotalRtpReceived
+        }       
+    STATUS current 
+    DESCRIPTION 
+        "Reports the total packets send and received."
+    ::= { saMtaStatsTrap 1 } 
+
+
+saMtaStatsTrapProvStatePktcMirror OBJECT-TYPE  
+    SYNTAX INTEGER {
+        pass                      (1),  
+        inProgress                (2), 
+        failConfigFileError       (3), 
+        passWithWarnings          (4), 
+        passWithIncompleteParsing (5), 
+        failureInternalError      (6), 
+        failureOtherReason        (7) 
+        } 
+    MAX-ACCESS  read-only 
+    STATUS      current 
+    DESCRIPTION  
+        "This object mirrors pktcMtaDevProvisioningState
+         either from tComLabs or CableLabs MIB."  
+    ::= { saMtaStatsTrap 2 }  
+
+
+saMtaStatsTrapProvState NOTIFICATION-TYPE 
+    OBJECTS {
+        saMtaStatsTrapProvStatePktcMirror
+        }       
+    STATUS current 
+    DESCRIPTION 
+        "Reports MTA provisioning state change."
+    ::= { saMtaStatsTrap 3 }
+    
+saMtaStatsTrapCallParams NOTIFICATION-TYPE 
+    OBJECTS {
+        ifIndex,
+        saMtaCallStatJitter,
+        saMtaCallStatLatency,
+        saMtaCallStatRemoteJitter
+        }       
+    STATUS current 
+    DESCRIPTION 
+       "Reports jitter, latency and delay from RTCP, measured latency and delay."
+    ::= { saMtaStatsTrap 4 } 
+    
+saMtaStatsTrapDisconnect NOTIFICATION-TYPE 
+    OBJECTS {
+        ifIndex,
+        saMtaEndPntStateLogical
+        }       
+    STATUS current 
+    DESCRIPTION 
+       "Reports state change of connect/disconnect to CMS."
+    ::= { saMtaStatsTrap 5 } 
+    
+saMtaStatsTrapNcsTrace NOTIFICATION-TYPE
+   OBJECTS {
+        ifIndex,
+        saMtaCallStatLastMessageReceived,
+        saMtaCallStatLastMessageSent
+        } 
+    STATUS current
+    DESCRIPTION
+        "Reports the last sent/received NCS message."
+    ::= { saMtaStatsTrap 6 } 
+
+saMtaStatsTrapCliAccessLoginGood NOTIFICATION-TYPE
+   OBJECTS {
+        saCmMtaCliAccessSessionAddress,
+        saCmMtaCliAccessSessionInProgress
+        } 
+    STATUS current
+    DESCRIPTION
+        "Reports the last successful CLI login or logout IP address
+         (depending on saCmMtaCliAccessSessionInProgress)."
+    ::= { saMtaStatsTrap 7 } 
+
+saMtaStatsTrapCliAccessLoginBad NOTIFICATION-TYPE
+   OBJECTS {
+        saCmMtaCliAccessBadAddress
+        } 
+    STATUS current
+    DESCRIPTION
+        "Reports the last unsuccessful CLI login IP address."
+    ::= { saMtaStatsTrap 8 } 
+
+saMtaStatsTrapQuarantineState  NOTIFICATION-TYPE
+    OBJECTS {
+        ifIndex,
+        saMtaEndPntQuarantineState,
+        sysUpTime
+        }
+    STATUS current
+    DESCRIPTION
+        "This notification is send out from EMTA when the state
+         of saMtaStatsEndptQuarantineState enters extendedlockstep mode."
+    ::= { saMtaStatsTrap 9 }
+
+
+saMtaStatDevLog OBJECT IDENTIFIER ::=  { saMtaStatsBase 6 }
+
+saMtaStatDevLogMethod OBJECT-TYPE
+    SYNTAX INTEGER  {
+        none(0),
+        syslog(1),
+        trap(2)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        ""
+    DEFVAL { 1 }
+    ::= { saMtaStatDevLog 1 }
+
+saMtaStatDevLogIpAddress OBJECT-TYPE
+    SYNTAX IpAddress
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "IP address of syslog/trap server. Default is 0.0.0.0."
+    ::= { saMtaStatDevLog 2 }
+   
+saMtaStatDevLogCliAccess OBJECT-TYPE
+    SYNTAX BITS {
+         loginGood(0),
+         loginBad(1),
+         logout(2)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Syslog/trap are sent on CLI login/logout events.
+         loginBad(1) is sent when saCmMtaCliAccessTriesToLock
+         is met."
+    DEFVAL { '00'h }
+    ::= { saMtaStatDevLog 3 }
+
+
+-- ===================
+-- LAST 24 HOURS TABLE
+-- ===================
+
+saMtaCallStatLast24HrsTable   OBJECT-TYPE
+    SYNTAX        SEQUENCE OF SaMtaCallStatLast24HrsEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+       "This table contains last 24 hrs calls statistics."
+   ::=  { saMtaStatsBase 7 }
+
+saMtaCallStatLast24HrsEntry  OBJECT-TYPE
+    SYNTAX        SaMtaCallStatLast24HrsEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "List of individual parameters for a single call"
+    INDEX { ifIndex }
+    ::= { saMtaCallStatLast24HrsTable 1 }
+
+SaMtaCallStatLast24HrsEntry   ::= SEQUENCE {
+    saMtaCallStatLast24HrsAvgJitterMeasurement   INTEGER,
+    saMtaCallStatLast24HrsMaxJitterMeasurement   INTEGER,
+    saMtaCallStatLast24HrsRTPAvgLatency          INTEGER,
+    saMtaCallStatLast24HrsMGCPResponseAvgLatency INTEGER,
+    saMtaCallStatLast24HrsSuccessfulMsgCount     INTEGER,
+    saMtaCallStatLast24HrsNegAckCount            INTEGER,
+    saMtaCallStatLast24HrsNoNTFYAckCount         INTEGER
+ 
+}
+ 
+saMtaCallStatLast24HrsAvgJitterMeasurement OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This objects contains the average jitter measurements for the last 24 hours."
+    ::= { saMtaCallStatLast24HrsEntry 1 }
+ 
+saMtaCallStatLast24HrsMaxJitterMeasurement OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This objects contains the maximum jitter measurements for the last 24 hours."
+    ::= { saMtaCallStatLast24HrsEntry  2 }
+ 
+saMtaCallStatLast24HrsRTPAvgLatency OBJECT-TYPE
+    SYNTAX      INTEGER
+    UNITS       "milliseconds"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This objects contains the average latency/delay for RTP Packets for the last
+        24 hours."
+    ::= { saMtaCallStatLast24HrsEntry  3 }
+ 
+saMtaCallStatLast24HrsMGCPResponseAvgLatency OBJECT-TYPE
+    SYNTAX      INTEGER
+    UNITS       "milliseconds"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This objects contains the average latency/delay for MGCP Response messages
+    for the last 24 hours."
+    ::= { saMtaCallStatLast24HrsEntry  4 }
+ 
+saMtaCallStatLast24HrsSuccessfulMsgCount OBJECT-TYPE
+    SYNTAX      INTEGER
+  MAX-ACCESS  read-only
+  STATUS      current
+  DESCRIPTION
+      "This object contains the count of successful MGCP messages transmitted to and
+        received from Call Agent for the last 24 hours."
+    ::= { saMtaCallStatLast24HrsEntry  5 }
+ 
+saMtaCallStatLast24HrsNegAckCount OBJECT-TYPE
+    SYNTAX      INTEGER
+  MAX-ACCESS  read-only
+  STATUS      current
+  DESCRIPTION
+      "This object contains the number of MGCP error responses sent to and
+        received from Call Agent for the last 24 hours."
+    ::= { saMtaCallStatLast24HrsEntry  6 }
+ 
+saMtaCallStatLast24HrsNoNTFYAckCount OBJECT-TYPE
+    SYNTAX      INTEGER
+  MAX-ACCESS  read-only
+  STATUS      current
+  DESCRIPTION
+      "This object contains the number of times no MGCP response was received for a sent NTFY
+    in the last 24 hours."
+    ::= { saMtaCallStatLast24HrsEntry  7 }
+
+-- LAST 24 HOURS TABLE
+-- ===================
+
+saMtaCallVoipMetricsTable   OBJECT-TYPE
+    SYNTAX        SEQUENCE OF SaMtaCallVoipMetricsEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+       "This table contains Voip call metrics."
+   ::=  { saMtaStatsBase 8 }
+
+saMtaCallVoipMetricsEntry  OBJECT-TYPE
+    SYNTAX        SaMtaCallVoipMetricsEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "List of individual voip metrics for a single call"
+    INDEX { saMtaCallVoipMetricsIndex }
+    ::= { saMtaCallVoipMetricsTable 1 }
+
+SaMtaCallVoipMetricsEntry   ::= SEQUENCE {    
+	  saCallVoipMetricsIndex                    Integer32,
+      saCallVoipMetricsMOSScore                 INTEGER,
+      saCallVoipMetricsRFSignalToNoiseLevel     Unsigned32,
+      saCallVoipMetricsResidualEchoRetLoss      Integer32,
+      saCallVoipMetricsIntervalJitter           Unsigned32,
+      saCallVoipMetricsAvgTxDelay               Unsigned32,
+      saCallVoipMetricsJBDiscardRate            Unsigned32,
+      saCallVoipMetricsJBAdjRate                Unsigned32,
+      saCallVoipMetricsJBMaxSize                Unsigned32,
+      saCallVoipMetricsNetRdTripDelay           Unsigned32,
+      saCallVoipMetricsSignalLevel              Integer32,
+      saCallVoipMetricsNoiseLevel               Integer32,
+      saCallVoipMetricsRfTxLevel                Integer32,
+      saCallVoipMetricsRfRxLevel                Integer32,
+      saCallVoipMetricsCallTrace                SnmpAdminString
+ }           
+
+  saCallVoipMetricsIndex OBJECT-TYPE
+    SYNTAX Integer32 (1..20) 
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Index of the saCallVoipMetricsEntry."
+    ::= { saMtaCallVoipMetricsEntry 1 } 
+ 
+  saCallVoipMetricsMOSScore OBJECT-TYPE
+    SYNTAX      INTEGER {
+      bad(1),
+      poor(2),
+      fair(3),
+      good(4),
+      excellent(5)
+    }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object reports the numerical indication of the perceived quality
+        of received media after compression and/or transmission.  The MOS score
+        is expressed as a single number in the range of 1 to 5.  The associated
+        quality characteristics defined for each MOS score:
+        
+        bad(1) - Very annoying
+        poor(2) - Annoying
+        fair(3) - Slightly annoying
+        good(4) - Perceptible, but not annoying
+        excellent(5) - Imperceptible"
+    ::= { saMtaCallVoipMetricsEntry 2 }
+
+saCallVoipMetricsRFSignalToNoiseLevel OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object reports the general measurement of the ratio of RF signal power 
+        to noise power."
+    ::= { saMtaCallVoipMetricsEntry 3 }
+
+saCallVoipMetricsResidualEchoRetLoss OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS "dB"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object reports the residual echo return loss, which relates to the
+        effective echo level that a user would hear.  It is the ratio between the
+        transmitted signal level and the received echo level expressed in dB."
+    ::= { saMtaCallVoipMetricsEntry 4 }
+
+saCallVoipMetricsIntervalJitter OBJECT-TYPE
+    SYNTAX      Unsigned32
+    UNITS "Milliseconds"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object reports an estimate of the statistical variance of the RTP data
+        packet inter-arrival time."
+    ::= { saMtaCallVoipMetricsEntry 5 }
+
+saCallVoipMetricsAvgTxDelay OBJECT-TYPE
+    SYNTAX      Unsigned32
+    UNITS "Milliseconds"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object reports an estimate of the network latency.  The is the average 
+        value of the difference between the NTP timestamp indicated by the senders of
+        the RTCP messages and the NTP timestamp of the receivers, measured when the
+        messages are received."
+    ::= { saMtaCallVoipMetricsEntry 6 }
+
+saCallVoipMetricsJBDiscardRate OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object reports the number of packets discarded by the eMTA's jitter buffer."
+    ::= { saMtaCallVoipMetricsEntry 7}
+
+saCallVoipMetricsJBAdjRate OBJECT-TYPE
+    SYNTAX      Unsigned32
+    UNITS "Milliseconds"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object reports the jitter buffer's adjustment rate."
+    ::= { saMtaCallVoipMetricsEntry 8}
+
+saCallVoipMetricsJBMaxSize OBJECT-TYPE
+    SYNTAX      Unsigned32
+    UNITS "Milliseconds"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object reports the maximum size of the jitter buffer, in milliseconds."
+    ::= { saMtaCallVoipMetricsEntry 9 }
+
+saCallVoipMetricsNetRdTripDelay OBJECT-TYPE
+    SYNTAX      Unsigned32
+    UNITS "Milliseconds"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object reports the round trip delay (latency) for a packet to travel from
+        the originating end of a call to the terminating end of a call, and back to the
+        originating end of a call."
+    ::= { saMtaCallVoipMetricsEntry 10 }
+
+saCallVoipMetricsSignalLevel OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "dB"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object reports the audio signal levels."
+    ::= { saMtaCallVoipMetricsEntry 11 }
+
+saCallVoipMetricsNoiseLevel OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "dB"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object reports the audio noise levels."
+    ::= { saMtaCallVoipMetricsEntry 12 }
+
+saCallVoipMetricsRfTxLevel OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "dB"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object reports the RF transmit level."
+    ::= { saMtaCallVoipMetricsEntry 13 }
+
+saCallVoipMetricsRfRxLevel OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "dB"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object reports the RF receive level."
+    ::= { saMtaCallVoipMetricsEntry 14 }
+
+saCallVoipMetricsCallTrace OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object reports the capture of MGCP/NCS message series used to establish
+        and terminate call.  The call trace information include the following 
+        information:
+        (1) The NCS command/message (CRCX, DLCX, MDCX, etc.)
+        (2) The transaction identifier (transaction number)
+        (3) Any applicable command parameters (CallID, DigitMap, DetectEvents, etc)
+        (4) The destination for the command/message (eg aaln/1@broadcom.com)
+        (5) The protocol version numbers for both MGCP and NCS"
+    ::= { saMtaCallVoipMetricsEntry 15 }
+        
+saMtaCallStatDialedHash OBJECT-TYPE
+    SYNTAX INTEGER {
+        none(0),
+        all(1),
+        last3(2)
+        } 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Mib to control the formatting of the displayed phone number in saMtaCallStatDialedNumber and 
+        saMtaCallStatLast10DialedNumber.    
+        none(0) : Do not hash out any digits of the recorded phone number
+        all(1)  : Hash out all the digits of the recorded phone number
+        last3(2): Hash the last three digits of the recorded phone number (ex: 7701234xxx).
+        This MIB is read-only, and can only be set in the MTA config file."
+    DEFVAL { 0 }
+    ::= { saMtaStatsBase 9 }
+END
+

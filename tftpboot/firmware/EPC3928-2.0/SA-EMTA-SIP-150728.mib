@@ -1,0 +1,2486 @@
+--**************************************************************************
+--                                                                          
+--    Copyright 2010 Cisco Systems, Inc.
+--    All Rights Reserved                                                   
+--    No portions of this material may be reproduced in any
+--    form without the written permission of:                                                
+--        Cisco Systems, Inc.
+--        170 West Tasman Dr.
+--        San Jose, CA 95134
+--        USA
+--                                                 
+--**************************************************************************
+
+
+SA-EMTA-SIP-MIB DEFINITIONS ::= BEGIN
+IMPORTS
+        MODULE-IDENTITY, 
+        OBJECT-TYPE,enterprises, 
+        Integer32
+                FROM SNMPv2-SMI
+        ifIndex
+                FROM IF-MIB
+        SnmpAdminString 
+                FROM SNMP-FRAMEWORK-MIB
+        InetPortNumber
+                FROM INET-ADDRESS-MIB
+        TruthValue
+                FROM SNMPv2-TC ;
+
+sa           OBJECT IDENTIFIER ::= { enterprises 1429 }
+saVoip       OBJECT IDENTIFIER ::= { sa 78 }
+saMta        OBJECT IDENTIFIER ::= { saVoip 3 }
+                
+saEmtaSip   MODULE-IDENTITY  
+        LAST-UPDATED    "201309160000Z"
+        ORGANIZATION    "Cisco Systems, Inc."
+        CONTACT-INFO    "http://support.cisco.com"
+        DESCRIPTION
+            "Controls the behavior of SIP Embedded MTA fuctions.
+             Contains extra parameters on top of saMta tree
+             needed for SIP device to function properly.
+             This MIB is active only at the MTA IP address.
+             Can be part of MTA configuration file." 
+             
+
+        -- History
+        REVISION 	 "201309160000Z"
+        DESCRIPTION "CR 3313 -- Added saEmtaSipDeviceFeaturesCallForwardingProcessed
+        			 Updated CONTACT-INFO"
+             
+        REVISION 	 "201209110000Z"
+        DESCRIPTION "Updated description with new default value of saEmtaSipDeviceTimingSessionExpireSet"
+        REVISION 	 "201207010000Z"
+        DESCRIPTION "Added saEmtaSipDevicePrivacyEnabled"
+        
+		REVISION	 "201105110000Z"
+        DESCRIPTION               
+        	 " Added saEmtaSipEndPntOutboundProxyAddress and saEmtaSipEndPntOutboundProxyPortRemote to support SIP Outbound proxy - CR18560"
+
+	  REVISION	 "201104110000Z"
+        DESCRIPTION               
+        	 " Added enumerations for g722at64,g722at56,g722at48, and amrwb to PktcCodecType - CR 18057"
+                 
+        REVISION	 "201102280000Z"
+        DESCRIPTION               
+        	 " Added saEmtaSipDeviceBypassAckBranchChk MIB - CR 17907"
+
+        REVISION	 "201008230000Z"
+        DESCRIPTION               
+        	 " Added saEmtaSipDeviceConfigDNSNAPTRDisabled, 
+        	   saEmtaSipDeviceCfgHookFlashRelayMimeType and 
+        	   saEmtaSipDeviceCfgHookFlashRelayEvString MIBs"
+        	        
+        REVISION	 "200911230000Z"
+        DESCRIPTION               
+        	 " Added value 2 (INFO Message) for saEmtaSipDeviceDtmfRelay"
+
+        REVISION     "200902200000Z"
+        DESCRIPTION               
+        	 " Added default values for SaEmtaSipDeviceToneToMsgEntry"
+
+        REVISION     "200902090000Z"
+        DESCRIPTION               
+        	 " Change saEmtaSipDeviceToneToMsgNumber MIB to read-only  (it is already working in read-only mode)"
+  
+        REVISION     "200812220000Z"
+        DESCRIPTION               
+        	 " Added new object saEmtaSipDeviceFeaturesCallWaitingDuration (2338)"
+        
+        REVISION     "200810220000Z"
+        DESCRIPTION
+             "Added new value dataModeForceT38(3) to saEmtaSipENdPntDataMode (2955)" 
+        
+        REVISION     "200804230000Z"
+        DESCRIPTION
+            "Added saEmtaSipEndPntConfigUserConfBridgeURI (2467)
+             Added saEmtaSipDeviceFeaturesCIDAbsenceReason (1799,1800)
+             Added saEmtaSipDeviceInterDigitMapTimeoutTone (1857)
+             Added saEmtaSipDeviceReferToUri (1736)"
+
+        REVISION     "200708140000Z"
+        DESCRIPTION
+            "Added B, F, H, D, J, T4 RFC timers (1301)
+             Changed saEmtaSipDeviceTimingTransactionTimeout
+                     to obsolete (1301)
+             Added saEmtaSipCodec tree (1302)
+             Obsoleted saEmtaSipDeviceCodec (1302)
+             Added saEmtaSipDeviceDTMFRelayPayloadType (1303)
+             Added saEmtaSipDeviceHookFlashRelay (1304)
+             Added saEmtaSipEndPnGoodProxyEnabled (1305)
+             Added saEmtaSipEndPntAddToWhiteList (1306)
+             Added saEmtaSipDeviceInterDigitTimeout (1307)
+             Added saEmtaSipEndPntStatAgentURI (1311)
+             Added saEmtaSipDeviceFeaturesDND tree 
+                   saEmtaSipEndPntFeaturesDNDAdminStatus
+                   saEmtaSipEndPntFeaturesDNDUserStatus (1312)
+             Changed saEmtaSipEndPntFeaturesBlockCIDUserStatus to
+                     saEmtaSipEndPntFeaturesSendCIDUserStatus (5534)
+             Added saEmtaSipDeviceCallerNumberTable and
+                   saEmtaSipDeviceCallerNameTable  (1333)
+             Added saEmtaSipDeviceRtcpXR (1421)
+             Added saEmtaSipDeviceToneToMsgTable (1436)
+             Added saEmtaSipEndPntProxyAuthId (1539)
+             Changed to read-write (1502,1540):
+                   saEmtaSipEndPntProxyUsername
+                   saEmtaSipEndPntProxyPassword
+                   saEmtaSipEndPntProxyDisplayName
+                   saEmtaSipEndPntFeaturesCallWaitingAdminStatus
+                   saEmtaSipEndPntFeaturesCallForwardingNoAnswerAdminStatus
+                   saEmtaSipEndPntFeaturesCallForwardingBusyAdminStatus
+                   saEmtaSipEndPntFeaturesCallForwardingAllAdminStatus
+                   saEmtaSipEndPntFeaturesRedialCallAdminStatus
+                   saEmtaSipEndPntFeaturesAutoRedialAdminStatus
+                   saEmtaSipEndPntFeaturesMWIAdminStatus
+                   saEmtaSipEndPntFeaturesCallTransferAdminStatus
+                   saEmtaSipEndPntFeaturesBlockCIDAdminStatus
+                   saEmtaSipEndPntFeaturesCancelCIDAdminStatus
+                   saEmtaSipEndPntFeatures3WCAdminStatus
+             Added saEmtaSipDeviceDigitModification tree (1542)
+             Added saEmtaSipNat tree (1547)
+             Added saEmtaSipEndPntCodecTableOnly (1559)
+             Added saEmtaSipDeviceSdpAllCapsEnabled (1606)
+             Added custom(3) to saEmtaSipDeviceDhcpFqdn (2333)
+             Added saEmtaSipDeviceUriDomainName (2333)"
+
+        REVISION     "200701040000Z"
+        DESCRIPTION
+            "Added saEmtaSipEndPntDataMode (1167)
+             Added saEmtaSipDeviceDhcpFqdn (1273)"
+
+        REVISION     "200608150000Z"
+        DESCRIPTION
+            "Added saEmtaSipDeviceProtocol (771,5210)
+             Added saEmtaSipEndPntPacketization (772,5211)
+             Added saEmtaSipDeviceRohStart (770,5209)
+             Added useNumber(3) to saEmtaSipEndPntDisplayNameToPhone
+                   and changed desciption (775,5213)
+             Changed to read-write (782):
+                     saEmtaSipEndPntFeaturesCallForwardingNumber
+                     saEmtaSipEndPntFeaturesCallForwardingNoAnswerUserStatus
+                     saEmtaSipEndPntFeaturesCallForwardingBusyUserStatus
+                     saEmtaSipEndPntFeaturesCallForwardingAllUserStatus
+             Added saEmtaSipEndPntFeatures3WCAdminStatus (784)
+             Added saEmtaSipDeviceFeaturesCallWaitingOnHold (791)
+             Added saEmtaSipDeviceRemoveBindings (792)
+             Changed description of saEmtaSipEndPntFeaturesWarmLineStatus
+             Added saEmtaSipDevicePrack (872)"
+
+        REVISION     "200606140000Z"
+        DESCRIPTION
+            "Changed saEmtaSipEndPntProxyAddress to allow DNS SRV (720,5174)"
+
+        REVISION     "200604120000Z"
+        DESCRIPTION
+            "Added saEmtaSipEndPntFeaturesBlockCIDUserStatus (610,5059)
+             Added saEmtaSipEndPntDisplayNameToPhone (611,5060)
+             Added saEmtaSipDeviceFeaturesAutoRedialCancelDigitMap (614,5090)"
+
+        REVISION     "200601240000Z" -- 2006/01/24
+        DESCRIPTION
+            "Changed saEmtaSipDeviceFeaturesWarmLineDigitMap
+                  to saEmtaSipDeviceFeaturesWarmLineEnableDigitMap
+             Added saEmtaSipDeviceFeaturesWarmLineDisableDigitMap"
+
+        REVISION     "200601230000Z" -- 2006/01/23
+        DESCRIPTION
+            "Changed saEmtaSipDeviceTimingT2 default to 4000
+             Changed saEmtaSipDeviceTimingTransactionTimeout default to 5000
+             Added saEmtaSipDeviceFeaturesAutoRedialDigitMap
+             Added saEmtaSipDeviceFeaturesAutoRedialInterval
+             Added saEmtaSipDeviceFeaturesAutoRedialTimeout
+             Added saEmtaSipDeviceFeaturesAutoRedialSessionProgressTimer
+             Added saEmtaSipEndPntFeaturesAutoRedialAdminStatus
+             Added saEmtaSipEndPntFeaturesMWIAdminStatus
+             Added saEmtaSipEndPntFeaturesCallTransferAdminStatus
+             Added saEmtaSipDeviceFeaturesDisableCIDDigitMap
+             Added saEmtaSipDeviceFeaturesEnableCIDDigitMap
+             Added saEmtaSipDeviceFeaturesCancelCIDDigitMap
+             Added saEmtaSipEndPntFeaturesCancelCIDAdminStatus"
+
+        REVISION     "200601120000Z" -- 2006/01/12
+        DESCRIPTION
+            "Changed saEmtaSipDeviceTimingRegisterAttempt
+                  to saEmtaSipDeviceTimingRegisterAttemptMin
+             Added saEmtaSipDeviceTimingRegisterAttemptMax
+             Added offhookDisconnected(2)
+                to saEmtaSipEndPntRegisterForce
+             Added saEmtaSipEndPntUnregisteredDial"
+
+        REVISION     "200512020000Z" -- 2005/12/02
+        DESCRIPTION
+            "Changed saEmtaSipDeviceFeaturesWarmLineNumber
+                  to saEmtaSipDeviceFeaturesWarmLineDigitMap
+             Added saEmtaSipDeviceFeaturesWarmLineTimer
+             Added saEmtaSipEndPntFeaturesWarmLineNumber"
+
+        REVISION     "200511150000Z" -- 2005/11/15
+        DESCRIPTION
+            "Changed saEmtaSipEndPntFeaturesCallWaitingUserStatus to read-write"
+
+        ::= { saMta 5 }
+
+
+   SaMtaCodecType ::= TEXTUAL-CONVENTION  
+       STATUS       obsolete  
+       DESCRIPTION    
+           "Codec types mapping."
+       SYNTAX INTEGER {
+			PCMU     (0),  -- G.711 u-law - 64 kbps
+			PCMA     (1),  -- G.711 A-law - 64 kbps
+			G7231    (2),  -- G.723.1
+			G7231A   (3),  -- G.723.1 Annex A
+			G726-16  (4),  -- G.726 16kbps
+			G726-24  (5),  -- G.726 24kbps
+			G726-32  (6),  -- G.726 32kbps
+			G726-40  (7),  -- G.726 40kbps
+			G728     (8),  -- G.728
+			G729     (9),  -- G.729
+			G729B    (10), -- G.729 Annex B
+			G729A    (11), -- G.729 Annex A
+			G729AB   (12), -- G.729 Annex A Annex B
+			G729E    (13), -- G.729 Annex E
+			LPCM-128 (14), -- Linear PCM Narrowband - 128 kbps
+			BV16     (15), -- BroadVoice Narrowband - 16 kbps
+			BV32     (16), -- BroadVoice Wideband - 32 kbps
+			PCMU-WB  (17), -- G.711 u-law Wideband - 128 kbps
+			PCMA-WB  (18), -- G.711 A-law Wideband - 128 kbps
+			LPCM-256 (19), -- Linear PCM Wideband - 256 kbps
+            G722     (20), -- G.722 64kbps Wideband, Mode 1 - 64kbps
+            G7221    (21), -- G.722.1 24kbps Wideband
+ 			T38      (22)  -- T.38
+       } 
+
+
+-- PktcCodecType from tComLabs draft-09
+-- Note Enumeration for G72264,G72256,G72248, and amrwb are temporary placeholders until Cablelabs or Excentis
+-- defines them.
+
+PktcCodecType ::= TEXTUAL-CONVENTION  
+    STATUS       current  
+    DESCRIPTION    
+        " This textual convention defines various types of codecs 
+          that MAY be supported. The description for each 
+          enumeration is listed below: 
+          Enumeration     Description 
+          other           a defined codec not in the enumeration 
+          unknown         a codec not defined in PacketCable 
+          g729            ITU-T Recommendation G.729 
+          reserved        for future use 
+          g729E           ITU-T Recommendation G.729E 
+          pcmu            Pulse Code Modulation u-law (PCMU) 
+          g726at32        ITU-T Recommendation G.726-32 (32 kbit/s) 
+          g728            ITU-T Recommendation G.728 
+
+
+          pcma            Pulse Code Modulation a-law (PCMA) 
+          g726at16        ITU-T Recommendation G.726-16 (16 kbit/s) 
+          g726at24        ITU-T Recommendation G.726-24 (24 kbit/s) 
+          g726at40        ITU-T Recommendation G.726-40 (40 kbit/s) 
+          ilbc            IETF internet low bit rate codec 
+          bv16            Broadcom BroadVoice16
+          g722at64        ITU-T G.722=64 (64 kbit/s)
+          g722at56        ITU-T G.722=56 (56 kbit/s)
+          g722at48        ITU-T G.722=48 (48 kbit/s)
+          amrwb           AMR-WB Adaptive Multirate Wideband (G722.2)
+        . The list of codecs is consistent with the IETF 
+          Real Time Transport Protocol (RTP) Profile registry and 
+          the RTP Map Parameters Table in [PKT-SP-CODEC]. The 
+          literal codec name for each codec is listed below: 
+          Codec     Literal Codec Name 
+          g729              G729 
+          g729E             G729E 
+          pcmu              PCMU 
+          g726at32          G726-32 
+          g728              G728 
+          pcma              PCMA 
+          g726at16          G726-16 
+          g726at24          G726-24 
+          g726at40          G726-40 
+          ilbc              iLBC 
+          bv16              BV16
+          g722at64          G722-64
+          g722at56          G722-56
+          g722at48          G722-48
+          amrwb             AMR-WB
+          The literal codec name is the second column of the table 
+          with codec RTP Map Parameters. Literal Codec Name Column 
+          contains the codec name used in the local connection 
+          options (LCO) of the NCS messages create connection 
+          (CRCX)/modify connection (MDCX) and is also used to 
+          identify the codec in the Call Management System (CMS) 
+          Provisioning Specification. RTP Map Parameter Column of 
+          the Table contains the string used in the media attribute 
+          line (a=) of the session description protocol (SDP) 
+          parameters in NCS messages." 
+    SYNTAX INTEGER { 
+               other     (1), 
+               unknown   (2), 
+               g729      (3), 
+               reserved  (4), 
+               g729E     (5), 
+               pcmu      (6), 
+               g726at32  (7), 
+               g728      (8), 
+               pcma      (9), 
+               g726at16  (10), 
+               g726at24  (11), 
+               g726at40  (12), 
+               ilbc      (13), 
+               bv16      (14),
+               g722at64  (100), 
+               g722at56  (101), 
+               g722at48  (102),
+               amrwb     (103) 
+    } 
+
+
+PktcSigDevToneType ::= TEXTUAL-CONVENTION  
+    STATUS       current  
+    DESCRIPTION   
+        "Unique value that will correspond to the different  
+         tone types. These tones can be provisioned based on  
+         country specific needs. This object defines the type  
+         of tone being accessed.  
+         The alertingSignal, specialDial, specialInfo, release, 
+         congestion, userDefined1, userDefined2, userDefined3 
+         and userDefined4 tone types are used in  
+         the E line package."  
+    SYNTAX       INTEGER {   
+                 busy(1),   
+                 confirmation(2),   
+                 dial(3),   
+                 messageWaiting(4),   
+                 offHookWarning(5),   
+                 ringBack(6),   
+                 reOrder(7),   
+                 stutterdial(8),   
+                 callWaiting1(9),   
+                 callWaiting2(10),   
+                 callWaiting3(11),   
+                 callWaiting4(12),  
+                 alertingSignal(13),  
+                 specialDial(14),  
+                 specialInfo(15),  
+                 release(16),  
+                 congestion(17),  
+                 userDefined1(18),  
+                 userDefined2(19),  
+                 userDefined3(20),  
+                 userDefined4(21)  
+                 }   
+ 
+
+
+-- SIP EMTA Device
+saEmtaSipDevice   OBJECT IDENTIFIER ::=  { saEmtaSip 1 }
+
+saEmtaSipDeviceSipPortLocal OBJECT-TYPE
+    SYNTAX InetPortNumber
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Defines UDP source port for SIP messages (sent to
+         registrar or proxy."
+    DEFVAL { 5060 }
+    ::= { saEmtaSipDevice 5 }
+
+saEmtaSipDeviceSipLogsAddress OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Defines FQDN or IP of Syslog server.
+         All SIP packets will be sent to this server
+         as syslog messages for debuging purposes.
+         If not specified, this is turned off."
+    ::= { saEmtaSipDevice 6 }
+
+saEmtaSipDeviceSipLogsPortRemote OBJECT-TYPE
+    SYNTAX InetPortNumber
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Defines UDP destination port for Syslog messages."
+    DEFVAL { 514 }
+    ::= { saEmtaSipDevice 7 }
+
+saEmtaSipDeviceDigitMap OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE (0..2048))
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Defines digit map.
+         Default value depends on current phone number."
+    ::= { saEmtaSipDevice 8 }
+
+saEmtaSipDeviceDigitMapTimeout OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS         "milliseconds"
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Defines timeout for digit entry."
+    DEFVAL { 5000 }
+    ::= { saEmtaSipDevice 9 }
+
+saEmtaSipDeviceEchoCanceller OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Controls echo canceller state."
+    DEFVAL { 1 }
+    ::= { saEmtaSipDevice 10 }
+
+saEmtaSipDeviceSilentSuppression OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Controls silent suppression."
+    DEFVAL { 0 }
+    ::= { saEmtaSipDevice 11 }
+
+saEmtaSipDeviceCodec OBJECT-TYPE
+    SYNTAX SaMtaCodecType
+    MAX-ACCESS    read-only
+    STATUS  obsolete
+    DESCRIPTION
+        "Controls codec.
+         Default for DPX is PCMU.
+         Default for EPX is PCMA."
+    ::= { saEmtaSipDevice 12 }
+
+saEmtaSipDeviceDtmfRelay OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1),
+        INFOMessage(2)
+    }
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        " This object contains the value which controls the usage of the DTMF
+		Relay. Setting this object to enabled(1) causes the MTA to use the
+		DTMF Tone Relay as per RFC2833. Setting this object to disabled(0)
+		causes the eMTA to pass DTMF tones inband. Setting this object to
+		INFO Message(2) causes eMTA to mute DTMF tones from the encoded audio and
+		pass DTMF as signaling events."
+    DEFVAL { 0 }
+    ::= { saEmtaSipDevice 13 }
+
+saEmtaSipDeviceUseFqdn OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Choose to use FQDN or IP inside SIP messages"
+    DEFVAL { 0 }
+    ::= { saEmtaSipDevice 14 }
+
+saEmtaSipDeviceLocalRingback OBJECT-TYPE 
+    SYNTAX INTEGER { 
+        disable(0), 
+        enable(1),
+        sdpDependent(2) 
+    }
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION 
+        "Controls if local ring back is played out.
+         If set to sdpDependent(2), MTA will only play local ringback
+         when SDP is not received in 180 Ringing.
+         When playing local ringback, incoming RTP (if any) is muted." 
+    DEFVAL { 1 } 
+    ::= { saEmtaSipDevice 15 }
+
+saEmtaSipDeviceIpDial OBJECT-TYPE 
+    SYNTAX INTEGER { 
+        disable(0), 
+        enable(1) 
+    } 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION 
+        "Controls dialing by IP address. 
+         For IP address x1.x2.x3.x4, dial x1*x2*x3*x4# 
+         For example for IP address of 10.0.1.125, dial 10*0*1*125# " 
+    DEFVAL { 0 } 
+    ::= { saEmtaSipDevice 16 }
+
+
+-- ================
+-- FEATURES OBJECTS
+
+saEmtaSipDeviceFeatures OBJECT IDENTIFIER ::= { saEmtaSipDevice 17 }
+
+saEmtaSipDeviceFeaturesHookFlashHandle OBJECT-TYPE
+    SYNTAX INTEGER {
+        us(1),
+        eu(2)
+    }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+    "TBW"
+    DEFVAL { 1 }
+    ::= { saEmtaSipDeviceFeatures 1 }
+
+-- CALL WAITING
+
+saEmtaSipDeviceFeaturesCallWaiting OBJECT IDENTIFIER ::= { saEmtaSipDeviceFeatures 2 }
+
+saEmtaSipDeviceFeaturesCallWaitingOnDigitMap OBJECT-TYPE 
+    SYNTAX SnmpAdminString 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION 
+        "Defines digit map to activate call waiting by user. 
+        If not specified, user cannot control this feature and 
+        saEmtaSipFeaturesCallWaitingOffDigitMap is erased." 
+    DEFVAL { "" } 
+    ::= { saEmtaSipDeviceFeaturesCallWaiting 3 } 
+
+saEmtaSipDeviceFeaturesCallWaitingOffDigitMap OBJECT-TYPE 
+    SYNTAX SnmpAdminString 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION 
+        "Defines digit map to deactivate call waiting by user. 
+        If not specified, user cannot control this feature and 
+        saEmtaSipFeaturesCallWaitingOnDigitMap is erased." 
+    DEFVAL { "" } 
+    ::= { saEmtaSipDeviceFeaturesCallWaiting 4 }
+
+saEmtaSipDeviceFeaturesCallWaitingOnHoldTone OBJECT-TYPE 
+    SYNTAX BITS {
+           passive(0),
+           active(1)
+    }
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION 
+        "Controls whether to play the tone while an endpoint is on hold.
+         The tone is defined as callWaiting2 in tComLabs MIB.
+         For a scenario: A-B talk, C calls A, A hook-flash to C
+         - passive: tone is played on B
+         - active: tone is played on A (during conversation with C)" 
+    DEFVAL { '00'h } 
+    ::= { saEmtaSipDeviceFeaturesCallWaiting 5 }
+    
+saEmtaSipDeviceFeaturesCallWaitingDuration OBJECT-TYPE 
+    SYNTAX Unsigned32
+    UNITS "seconds"
+    MAX-ACCESS read-only
+    STATUS current 
+    DESCRIPTION 
+        "Controls duration of call waiting tone before sending busy-here.? "
+    DEFVAL { 180 } 
+    ::= { saEmtaSipDeviceFeaturesCallWaiting 6 }
+
+-- RETURN CALL
+
+saEmtaSipDeviceFeaturesReturnCall OBJECT IDENTIFIER ::= { saEmtaSipDeviceFeatures 4 }
+
+saEmtaSipDeviceFeaturesReturnCallDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for Return Call."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesReturnCall 2 }
+
+-- CANCEL CALL WAITING
+
+saEmtaSipDeviceFeaturesCancelCallWaiting OBJECT IDENTIFIER ::= { saEmtaSipDeviceFeatures 5 }
+
+saEmtaSipDeviceFeaturesCancelCallWaitingDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for Cancel Call Waiting."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesCancelCallWaiting 1 }
+
+-- WARM LINE
+
+saEmtaSipDeviceFeaturesWarmLine OBJECT IDENTIFIER ::= { saEmtaSipDeviceFeatures 6 }
+
+saEmtaSipDeviceFeaturesWarmLineEnableDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for enabling Warm Line.
+         Following should be the destination number."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesWarmLine 1 }
+
+saEmtaSipDeviceFeaturesWarmLineDisableDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for disabling Warm Line."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesWarmLine 2 }
+
+saEmtaSipDeviceFeaturesWarmLineTimer OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "seconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines timer for Warm Line."
+    DEFVAL { 5 }
+    ::= { saEmtaSipDeviceFeaturesWarmLine 3 }
+
+-- CALL FORWARDING
+
+saEmtaSipDeviceFeaturesCallForwarding OBJECT IDENTIFIER ::= { saEmtaSipDeviceFeatures 7 }
+
+saEmtaSipDeviceFeaturesCallForwardingSetNumberDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for setting up number to forward.
+         The number is accepted per main digit map.
+         Note: the number is stored in non-vol."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesCallForwarding 1 }
+
+saEmtaSipDeviceFeaturesCallForwardingDisableDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for disabling All Call Forwarding.
+         Note: this disables Unconditional Call Forwarding too."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesCallForwarding 2 }
+
+saEmtaSipDeviceFeaturesCallForwardingNoAnswerDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for enabling Call Forward on No Answer."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesCallForwarding 3 }
+
+saEmtaSipDeviceFeaturesCallForwardingBusyDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for enabling Call Forward on Busy."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesCallForwarding 4 }
+
+saEmtaSipDeviceFeaturesCallForwardingAllOnDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for enabling Call Forward Unconditional."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesCallForwarding 5 }
+
+saEmtaSipDeviceFeaturesCallForwardingAllOffDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for disabling Call Forward Unconditional."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesCallForwarding 6 }      
+    
+saEmtaSipDeviceFeaturesCallForwardingProcessed OBJECT-TYPE
+	SYNTAX INTEGER {
+			locally(1),
+			byProxy(2)
+			}
+	MAX-ACCESS read-only
+	STATUS current
+	DESCRIPTION
+		"Defines where Call forwarding is processed:
+		By default call forwarding will processed locally(1).
+		When Proxy(2) controls call forwarding, star code and forward number is send to proxy."
+		
+	DEFVAL { "" }
+::= { saEmtaSipDeviceFeaturesCallForwarding 7 }
+
+-- REDIAL LAST CALL
+
+saEmtaSipDeviceFeaturesRedialCall OBJECT IDENTIFIER ::= { saEmtaSipDeviceFeatures 8 }
+
+saEmtaSipDeviceFeaturesRedialCallDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for Redial Call."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesRedialCall 1 }    
+   
+
+-- AUTO REDIAL ON BUSY
+
+saEmtaSipDeviceFeaturesAutoRedial OBJECT IDENTIFIER ::= { saEmtaSipDeviceFeatures 9 }
+
+saEmtaSipDeviceFeaturesAutoRedialDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for Automatic Redial."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesAutoRedial 1 }
+
+saEmtaSipDeviceFeaturesAutoRedialInterval OBJECT-TYPE
+    SYNTAX INTEGER
+    UNITS "Seconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The interval the MTA tries calling the busy number."
+    DEFVAL { 15 }
+    ::= { saEmtaSipDeviceFeaturesAutoRedial 2 }
+
+saEmtaSipDeviceFeaturesAutoRedialTimeout OBJECT-TYPE
+    SYNTAX INTEGER
+    UNITS "Seconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The timeout after which MTA will stop trying."
+    DEFVAL { 1800 }
+    ::= { saEmtaSipDeviceFeaturesAutoRedial 3 }
+
+saEmtaSipDeviceFeaturesAutoRedialSessionProgressTimer OBJECT-TYPE
+    SYNTAX INTEGER
+    UNITS "Milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "This timer starts when MTA receives '183 Session Progress'.
+         If the timer expires, MTA will start ringing."
+    DEFVAL { 5000 }
+    ::= { saEmtaSipDeviceFeaturesAutoRedial 4 }
+
+saEmtaSipDeviceFeaturesAutoRedialCancelDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map to cancel Automatic Redial."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesAutoRedial 5 }
+
+-- CALLER ID
+
+saEmtaSipDeviceFeaturesCID OBJECT IDENTIFIER ::= { saEmtaSipDeviceFeatures 10 }
+
+saEmtaSipDeviceFeaturesDisableCIDDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for disabling CallerID permanently."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesCID 1 }
+
+saEmtaSipDeviceFeaturesEnableCIDDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for enabling CallerID."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesCID 2 }
+
+-- CANCEL CALLER ID
+
+saEmtaSipDeviceFeaturesCancelCIDDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for cancel CallerID per call."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesCID 3 }
+
+-- CALLER ID DISPLAY TABLES
+
+saEmtaSipDeviceCallerNumberTable OBJECT-TYPE
+    SYNTAX        SEQUENCE OF SaEmtaSipDeviceCallerNumberEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "This table contains a list of preferred Calling Line Identity"
+    ::=  { saEmtaSipDeviceFeaturesCID 4 }
+
+saEmtaSipDeviceCallerNumberEntry    OBJECT-TYPE
+    SYNTAX        SaEmtaSipDeviceCallerNumberEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "Each entry contains the preferred Calling Line Identity if
+         its value is valid telephone number according to RFC2806."
+    INDEX { saEmtaSipCallerNumberRank }
+    ::=  { saEmtaSipDeviceCallerNumberTable 1 }
+
+SaEmtaSipDeviceCallerNumberEntry  ::= SEQUENCE {
+    saEmtaSipCallerNumberRank  INTEGER,
+    saEmtaSipCallerNumberField INTEGER 
+    }
+
+saEmtaSipCallerNumberRank  OBJECT-TYPE
+    SYNTAX INTEGER (1..7)
+    MAX-ACCESS     not-accessible
+    STATUS         current
+    DESCRIPTION
+        "Index for specifying the rank. For example, a value of 1
+         means most preferred.
+         If rank 1 not present or not valid, try using rank 2, etc."
+    ::= { saEmtaSipDeviceCallerNumberEntry 1 }
+
+saEmtaSipCallerNumberField  OBJECT-TYPE
+    SYNTAX INTEGER {
+        fromDiplayNameAnonymous(1),
+        pAssertedIdUri(2),
+        fromUri(3),
+        pAssertedIdDisplayName(4),
+        fromDisplayName(5),
+        suppress(6),
+        fromUriAnonymous(7)
+        }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The field from which callerId number will be taken and
+         displayed on the phone.
+         The number will be displayed ONLY if the string is a number.
+         'fromDiplayNameAnonymous' means that when 'Anonymous' string is
+         received in INVITE's From's Display Name field, the endpoint
+         will only send 'Reason for Absence of Calling Line Identity
+         parameter.
+         'fromUriAnonymous' means that when 'Anonymous' string is
+         received in INVITE's From's SIP URI field, the endpoint
+         will only send 'Reason for Absence of Calling Line Identity
+         parameter.
+         Both anonoymous strings are case insensitive."
+    ::= { saEmtaSipDeviceCallerNumberEntry 2 }
+
+saEmtaSipDeviceCallerNameTable OBJECT-TYPE
+    SYNTAX        SEQUENCE OF SaEmtaSipDeviceCallerNameEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "This table contains a list of preferred Calling Party Name"
+    ::=  { saEmtaSipDeviceFeaturesCID 5 }
+
+saEmtaSipDeviceCallerNameEntry    OBJECT-TYPE
+    SYNTAX        SaEmtaSipDeviceCallerNameEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "Each entry contains the preferred Calling Party Name"
+    INDEX { saEmtaSipCallerNameRank }
+    ::=  { saEmtaSipDeviceCallerNameTable 1 }
+
+SaEmtaSipDeviceCallerNameEntry  ::= SEQUENCE {
+    saEmtaSipCallerNameRank  INTEGER,
+    saEmtaSipCallerNameField INTEGER
+    }
+
+saEmtaSipCallerNameRank  OBJECT-TYPE
+    SYNTAX INTEGER (1..5)
+    MAX-ACCESS     not-accessible
+    STATUS         current
+    DESCRIPTION
+        "Index for specifying the rank. For example, a value of 1
+         means most preferred.  
+         If rank 1 not present, try using rank 2, etc."
+    ::= { saEmtaSipDeviceCallerNameEntry 1 }
+
+saEmtaSipCallerNameField OBJECT-TYPE
+    SYNTAX INTEGER {
+         pAssertedIdDisplayName(1),
+         fromDisplayName(2),
+         pAssertedIdUri(3),
+         fromUri(4),
+         suppress(5)
+         }
+    MAX-ACCESS     read-only
+    STATUS         current
+    DESCRIPTION
+        "The field from which calling party name will be taken and
+         displayed on the phone.
+         The name will be displayed ONLY if it is not suppressed(5)
+         or not empty."
+    ::= { saEmtaSipDeviceCallerNameEntry 2 }
+
+-- CALLERID SPECIAL NAMES
+
+saEmtaSipDeviceFeaturesCIDAbsenceReason OBJECT-TYPE
+    SYNTAX BITS { 
+        p(0), 
+        c(1),
+        s(2),
+        o(3)
+    } 
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "When particular string is received by endpoint in INVITE's From's
+         DISPLAY NAME field, the endpoint sends special character to the
+         phone in callerID type 'Reason for Absence of Calling Line
+         Identity parameter' (type 4):
+           'Anonymous' = P
+           'Coin line/payphone' = C
+           'Interaction with other service' = S
+           'Unavailable' = O
+         Each reason for absence can be controled independently by its bit.
+         Bit set means the callerID will send the reason for absence.
+         Bit unset means empty string will be sent in the callerID name field.
+         By default only Anonymous is enabled."
+    DEFVAL { '80'h } 
+    ::= { saEmtaSipDeviceFeaturesCID 6 }
+
+-- DO NOT DISTURB
+
+saEmtaSipDeviceFeaturesDND OBJECT IDENTIFIER ::= { saEmtaSipDeviceFeatures 11 }
+
+saEmtaSipDeviceFeaturesDNDEnableDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for enabling DND."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesDND 1 }
+
+saEmtaSipDeviceFeaturesDNDDisableDigitMap OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines digit map for disabling DND."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesDND 2 }
+
+saEmtaSipDeviceFeaturesDNDForwardTo  OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The voice mail server may be used when the endpoint rejects a call.
+         All incoming calls will be forwarded to the specified voice mail
+         server by way of a 302 response."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceFeaturesDND 3 }
+
+
+-- END FEATURE OBJECTS
+-- ===================
+
+-- ==============
+-- TIMING OBJECTS
+
+saEmtaSipDeviceTiming OBJECT IDENTIFIER ::= { saEmtaSipDevice 18 }
+
+saEmtaSipDeviceTimingRegisterExpireSet OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "Seconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+    "This object sets expire field in the REGISTER message to SIP proxy.
+    The value of 0 means expire field will not be sent out."
+    DEFVAL { 0 }
+    ::= { saEmtaSipDeviceTiming 1 }
+
+saEmtaSipDeviceTimingReRegisterGraceTime OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "Seconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+    "This object defines how long before registration expires the
+    re-registration will happen.
+    Note: This value must be less than half of
+          saEmtaSipDeviceTimingRegisterExpireSet"
+    DEFVAL { 10 }
+    ::= { saEmtaSipDeviceTiming 2 }
+
+saEmtaSipDeviceTimingSessionExpireSet OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "Seconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+    "This object sets expire field in the INVITE message to SIP proxy.
+    The minimum value of this field is 90 except 0 as per RFC 4028.	
+    The value of 0 means Session-Expires field will not be sent out.
+    The MTA will refresh sessions at half session time."
+    DEFVAL { 0 }
+    ::= { saEmtaSipDeviceTiming 3 }
+
+-- transaction timers
+--
+-- When no response is received, SIP requests are retransmitted
+-- in the following pattern:
+-- T1 is the first exponential back-off value. The wait time between
+-- following packets will be doubled until T2 is reached, when the
+-- retransmission will stay at T2. MTA will finally give up trying
+-- when B or F expires.
+-- Register Attempt is used only for REGISTER messages and defines when to start
+-- trying REGISTER process again after Transaction Timeout expires. This is
+-- a random time between min and max.
+
+-- taken from RFC 3261:
+-- Timer    Value            Section               Meaning
+-- =======================================================================
+-- T1       500ms default    Section 17.1.1.1     RTT Estimate
+-- T2       4s               Section 17.1.2.2     The maximum retransmit
+--                                                interval for non-INVITE
+--                                                requests and INVITE
+--                                                responses
+-- T4       5s               Section 17.1.2.2     Maximum duration a
+--                                                message will
+--                                                remain in the network
+-- Timer A  initially T1     Section 17.1.1.2     INVITE request retransmit
+--                                                interval, for UDP only
+-- Timer B  64*T1            Section 17.1.1.2     INVITE transaction
+--                                                timeout timer
+-- Timer C  > 3min           Section 16.6         proxy INVITE transaction
+--                           bullet 11            timeout
+-- Timer D  > 32s for UDP    Section 17.1.1.2     Wait time for response
+--          0s for TCP/SCTP                       retransmits
+-- Timer E  initially T1     Section 17.1.2.2     non-INVITE request
+--                                                retransmit interval,
+--                                                UDP only
+-- Timer F  64*T1            Section 17.1.2.2     non-INVITE transaction
+--                                                timeout timer
+-- Timer G  initially T1     Section 17.2.1       INVITE response
+--                                                retransmit interval
+-- Timer H  64*T1            Section 17.2.1       Wait time for
+--                                                ACK receipt
+-- Timer I  T4 for UDP       Section 17.2.1       Wait time for
+--          0s for TCP/SCTP                       ACK retransmits
+-- Timer J  64*T1 for UDP    Section 17.2.2       Wait time for
+--          0s for TCP/SCTP                       non-INVITE request
+--                                                retransmits
+-- Timer K  T4 for UDP       Section 17.1.2.2     Wait time for
+--          0s for TCP/SCTP                       response retransmits
+
+
+saEmtaSipDeviceTimingT1 OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+    "This object sets the T1 timer."
+    DEFVAL { 500 }
+    ::= { saEmtaSipDeviceTiming 4 }
+
+saEmtaSipDeviceTimingT2 OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+    "This object sets the T2 timer."
+    DEFVAL { 4000 }
+    ::= { saEmtaSipDeviceTiming 5 }
+
+saEmtaSipDeviceTimingTransactionTimeout OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "milliseconds"
+    MAX-ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+    "This object sets the Transaction Timeout timer.
+     This is the T4 timer in RFC 3261."
+    DEFVAL { 5000 }
+    ::= { saEmtaSipDeviceTiming 6 }
+
+saEmtaSipDeviceTimingRegisterAttemptMin OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "seconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+    "This object sets the Register Attempt min timer."
+    DEFVAL { 3600 }
+    ::= { saEmtaSipDeviceTiming 7 }
+
+saEmtaSipDeviceTimingRegisterAttemptMax OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "seconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+    "This object sets the Register Attempt max timer."
+    DEFVAL { 3600 }
+    ::= { saEmtaSipDeviceTiming 8 }
+
+saEmtaSipDeviceTimingB OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "timesT1"
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "B from RFC 3261. INVITE transaction timeout timer.
+         The timer is expressed in terms of multiples of the value of T1"
+    DEFVAL { 64 }
+    ::= { saEmtaSipDeviceTiming 9 }
+
+saEmtaSipDeviceTimingF OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "timesT1"
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "F from RFC 3261. Non-INVITE transaction timeout timer.
+         The timer is expressed in terms of multiples of the value of T1"
+	DEFVAL { 64 }
+    ::= { saEmtaSipDeviceTiming 10 }
+
+saEmtaSipDeviceTimingH OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "timesT1"
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "H from RFC 3261. Wait time for ACK receipt. The timer is expressed
+         in terms of multiples of the value of T1"
+	DEFVAL { 64 }
+    ::= { saEmtaSipDeviceTiming 11 }
+
+saEmtaSipDeviceTimingD OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "milliseconds"
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "D from RFC 3261. Wait time in milliseconds for response retransmits.
+         Defaults to 3000 for UDP, 0 for TCP"
+    ::= { saEmtaSipDeviceTiming 12 }
+
+saEmtaSipDeviceTimingJ OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "timesT1"
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "J from RFC 3261. Wait time for non-INVITE request retransmits.
+         The timer is expressed in terms of multiples of the value of T1"
+    DEFVAL { 64 }
+    ::= { saEmtaSipDeviceTiming 13 }
+
+saEmtaSipDeviceTimingT4 OBJECT-TYPE
+    SYNTAX Unsigned32
+    UNITS "milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+    "This object sets the T4 timer"
+    DEFVAL { 5000 }
+    ::= { saEmtaSipDeviceTiming 14 }
+
+
+-- END TIMING OBJECTS
+-- ==================
+
+-- =======================
+-- TONE OBJECTS START HERE
+
+saEmtaSipDeviceTones OBJECT IDENTIFIER ::= { saEmtaSipDevice 19 }
+
+saEmtaSipDeviceByeTone OBJECT-TYPE 
+    SYNTAX INTEGER { 
+        none(0),
+        busy(1)
+    }
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION 
+        "Specifies what tone is played after remote party hangs up." 
+    DEFVAL { 0 } 
+    ::= { saEmtaSipDeviceTones 1 }
+
+saEmtaSipDeviceRohStart OBJECT-TYPE 
+    SYNTAX INTEGER
+    UNITS "seconds"
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION 
+        "Specifies how long to wait for receiver off-hook tone to play
+         after no activity is detected on the line." 
+    DEFVAL { 20 } 
+    ::= { saEmtaSipDeviceTones 2 }
+
+
+saEmtaSipDeviceToneToMsgTable    OBJECT-TYPE
+    SYNTAX        SEQUENCE OF SaEmtaSipDeviceToneToMsgEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "This table contains SIP messages numbers and the corresponding tones."
+    ::=  { saEmtaSipDeviceTones 3 }
+
+saEmtaSipDeviceToneToMsgEntry OBJECT-TYPE
+    SYNTAX        SaEmtaSipDeviceToneToMsgEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "Each entry contains SIP message code and corresponding tComLabs defined tone type"
+    INDEX { saEmtaSipDeviceToneToMsgNumber }
+    ::=  { saEmtaSipDeviceToneToMsgTable 1 }
+
+SaEmtaSipDeviceToneToMsgEntry          ::= SEQUENCE {
+    saEmtaSipDeviceToneToMsgNumber    INTEGER,
+    saEmtaSipDeviceToneToMsgToneType  PktcSigDevToneType
+}
+
+-- Default values for ToneTable
+-- saEmtaSipDeviceToneToMsgNumber.1 (integer) 403
+-- saEmtaSipDeviceToneToMsgNumber.2 (integer) 404
+-- saEmtaSipDeviceToneToMsgNumber.3 (integer) 408
+-- saEmtaSipDeviceToneToMsgNumber.4 (integer) 480
+-- saEmtaSipDeviceToneToMsgNumber.5 (integer) 486
+-- saEmtaSipDeviceToneToMsgNumber.6 (integer) 487
+-- saEmtaSipDeviceToneToMsgNumber.7 (integer) 500
+-- saEmtaSipDeviceToneToMsgNumber.8 (integer) 501
+-- saEmtaSipDeviceToneToMsgNumber.9 (integer) 502
+-- saEmtaSipDeviceToneToMsgNumber.10 (integer) 503
+-- saEmtaSipDeviceToneToMsgToneType.1 (integer) congestion(17)
+-- saEmtaSipDeviceToneToMsgToneType.2 (integer) congestion(17)
+-- saEmtaSipDeviceToneToMsgToneType.3 (integer) congestion(17)
+-- saEmtaSipDeviceToneToMsgToneType.4 (integer) busy(1)
+-- saEmtaSipDeviceToneToMsgToneType.5 (integer) busy(1)
+-- saEmtaSipDeviceToneToMsgToneType.6 (integer) congestion(17)
+-- saEmtaSipDeviceToneToMsgToneType.7 (integer) congestion(17)
+-- saEmtaSipDeviceToneToMsgToneType.8 (integer) congestion(17)
+-- saEmtaSipDeviceToneToMsgToneType.9 (integer) congestion(17)
+-- saEmtaSipDeviceToneToMsgToneType.10 (integer) busy(1)
+
+saEmtaSipDeviceToneToMsgNumber    OBJECT-TYPE
+    SYNTAX INTEGER
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "SIP message number"
+    ::= { saEmtaSipDeviceToneToMsgEntry 1 }
+
+saEmtaSipDeviceToneToMsgToneType        OBJECT-TYPE
+    SYNTAX PktcSigDevToneType
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Tone type according to tComLabs definition."
+    ::= { saEmtaSipDeviceToneToMsgEntry 2 }
+
+saEmtaSipDeviceInterDigitMapTimeoutTone OBJECT-TYPE 
+    SYNTAX INTEGER {
+        Busy(1),
+        Roh(2)
+        }
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION 
+        "Specifies what tone is played after inter digit timeout elapses." 
+    DEFVAL { 2 } 
+    ::= { saEmtaSipDeviceTones 4 }
+
+
+-- TONE OBJECTS END HERE
+-- =====================
+
+saEmtaSipDeviceProtocol OBJECT-TYPE 
+    SYNTAX BITS { 
+        udp(0), 
+        tcp(1),
+        tls(2)
+    } 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION 
+        "Controls the transport protocol for SIP messages."
+    DEFVAL { '80'h } 
+    ::= { saEmtaSipDevice 20 }
+
+saEmtaSipDeviceRemoveBindings OBJECT-TYPE 
+    SYNTAX INTEGER { 
+        none(0), 
+        single(1),
+        all(2)
+    } 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION 
+        "Controls whether to remove contact bindings before registering with proxy.
+         For all(2), the MTA will send contact:* and expires=0.
+         For single(1), the MTA will send expires=0 for each known contact."
+    DEFVAL { 0 } 
+    ::= { saEmtaSipDevice 21 }
+
+saEmtaSipDevicePrack OBJECT-TYPE 
+    SYNTAX INTEGER {
+        disabled(0), 
+        supported(1),
+        required(2)
+    } 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION 
+        "Controls the usage of PRACK messages (RFC3262)."
+    DEFVAL { 1 }
+    ::= { saEmtaSipDevice 22 }
+
+saEmtaSipDeviceDhcpFqdn OBJECT-TYPE 
+    SYNTAX INTEGER {
+        dhcp15(1),
+        proxyAddress(2),
+        custom(3)
+        }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "1: the domain name from DHCP option 15 will be used for
+            the SIP URI domain
+         2: value from saEmtaSipEndPntProxyAddress will be used for
+            the SIp URI domain
+         3: value from saEmtaSipDeviceUriDomainName will be used for
+            the SIP URI domain"
+    DEFVAL { 2 }
+    ::= { saEmtaSipDevice 23 }
+
+saEmtaSipDeviceDTMFRelayPayloadType OBJECT-TYPE
+    SYNTAX INTEGER (96..127)
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The preferred RTP payload type to be advertized for NTE (RFC 2833)
+         events reporting. This value will be used when negotiation for
+         media takes place during call establishment."
+    DEFVAL { 101 }
+    ::= { saEmtaSipDevice 24 }
+
+saEmtaSipDeviceHookFlashRelay OBJECT-TYPE
+    SYNTAX INTEGER {
+        hookFlashIgnored(0),
+        hookFlashProcessed(1),
+        hookFlashReported(2)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Hook Flash Relay: This MIB controls how and if hook flash events are to
+         be reported (via SIP signaling) to the peer during a call:
+         hookFlash_ignored - hook flash is ignored
+         hookFlash_processed - hook flash is processed, but NOT notified via SIP INFO
+         hookFlash_reported - hook flash is not processed, but reported via SIP INFO."
+    DEFVAL { 1 }
+    ::= { saEmtaSipDevice 25 }
+
+saEmtaSipDeviceInterDigitTimeout OBJECT-TYPE
+    SYNTAX INTEGER
+    UNITS "milliseconds"
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines inter-digit timeout (when user waits too long for entering
+         the next digit into valid digit map)."
+    DEFVAL { 5000 }
+    ::= { saEmtaSipDevice 26 }
+
+saEmtaSipDeviceRtcpXR OBJECT-TYPE 
+    SYNTAX INTEGER { 
+        disable(0), 
+        enable(1) 
+    } 
+    MAX-ACCESS    read-write 
+    STATUS        current 
+    DESCRIPTION 
+        "Controls RTCP eXtended Report functionality." 
+    DEFVAL { 1 } 
+    ::= { saEmtaSipDevice 27 }
+
+
+-- ==========================
+-- Digit modification
+
+saEmtaSipDeviceDigitModification OBJECT IDENTIFIER ::= { saEmtaSipDevice 28 }
+
+saEmtaSipDeviceDiModMap OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE (0..255))
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Defines digit map that if matched, digits will be modified."
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceDigitModification 1 }
+
+saEmtaSipDeviceDiModPrefix OBJECT-TYPE
+    SYNTAX OCTET STRING (SIZE (0..31))
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Defines digits to insert at the beginning of dialed string"
+    DEFVAL { "" }
+    ::= { saEmtaSipDeviceDigitModification 2 }
+
+-- End of digit map modification
+-- =============================
+
+saEmtaSipDeviceSdpAllCapsEnabled OBJECT-TYPE
+    SYNTAX  TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object can be used to determine whether to advertise all media
+         capabilities at once within an initial INVITE for a call.
+         Advertising all media capabilities means advertising support for
+         audio media and image (fax) media as necessary  (or configured to
+         do so). Not advertising all media capabilities means advertising 
+         only support for the current neccessary media for the time being of
+         the session.  
+         This does not affect the ability to automatically reINVITE for
+         switching between different media based on the current condition
+         (audio or image). In particular, this feature can be used when
+         working with non RFC 3264 compliant third party devices which tend
+         to only process a single media within an INVITE potentially leading
+         to SDP negotiation failure (in such case, set this value to 'false')."
+    DEFVAL { true }
+::= { saEmtaSipDevice 29 }
+
+saEmtaSipDeviceReferToUri OBJECT-TYPE
+    SYNTAX INTEGER { 
+        to(1), 
+        contact(2)
+        } 
+    MAX-ACCESS    read-write 
+    STATUS        current 
+    DESCRIPTION 
+        "Controls what URI to use in Refer-to for REFER message." 
+    DEFVAL { 2 } 
+    ::= { saEmtaSipDevice 30 }
+
+saEmtaSipDeviceUriDomainName OBJECT-TYPE
+    SYNTAX SnmpAdminString 
+    MAX-ACCESS read-only
+    STATUS current 
+    DESCRIPTION 
+        "Defines domain name for SIP URI if saEmtaSipDeviceDhcpFqdn
+         is set to custom(3)." 
+    DEFVAL { "" }
+    ::= { saEmtaSipDevice 31 } 
+    
+saEmtaSipDeviceConfigDNSNAPTRDisabled OBJECT-TYPE
+    SYNTAX  TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+       "This MIB controls the usage of DNS NAPTR requests for SIP server location.
+        When enabled (true), the SIP application will not make usage of DNS NAPTR lookup.
+        Note that this could result in a non functional SIP MTA if the DNS server
+        is not updated accordingly."
+    DEFVAL {false}
+::= { saEmtaSipDevice 32 }
+
+saEmtaSipDeviceCfgHookFlashRelayMimeType OBJECT-TYPE
+    SYNTAX  SnmpAdminString (SIZE(0..63))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Hook Flash Relay Content-Type:  This MIB controls how the Content-Type of the hook
+         flash relay event is reported."
+    DEFVAL {"audio/telephone-event"}
+::= { saEmtaSipDevice 33 }
+
+saEmtaSipDeviceCfgHookFlashRelayEvString OBJECT-TYPE
+    SYNTAX  SnmpAdminString (SIZE(0..63))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Hook Flash Relay Event String:  This MIB controls how the event string of the hook
+         flash relay event is reported."
+    DEFVAL {"Signal=!\nDuration=250"}
+::= { saEmtaSipDevice 34 }
+   
+saEmtaSipDeviceBypassAckBranchChk OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+       "This MIB provides an ability to change the RFC 3261 compliant behavior not to perform strict 
+       branch check for incoming 'ACK' message.
+       When the MIB is set to true, device will not perform strict branch check for the 
+       incoming Ack message. Default value of this MIB is set to false so that the device is RFC 3261 
+       compliant."
+    DEFVAL {False}
+::= { saEmtaSipDevice 35 }  
+
+saEmtaSipDevicePrivacyEnabled OBJECT-TYPE
+	SYNTAX TruthValue
+	MAX-ACCESS	read-write                          
+	STATUS	current
+	DESCRIPTION
+		"If the SIP image supports SIP Privacy Mechanisms as per RFC 3323, this MIB can then be used to enable/disable
+		the mechanism"
+	DEFVAL	{ false }
+::= { saEmtaSipDevice 36 }
+
+-- ==========================
+-- ENDPOINT TABLE STARTS HERE
+
+saEmtaSipEndPointTable   OBJECT-TYPE
+    SYNTAX        SEQUENCE OF SaEmtaSipEndPointEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+       "This table describes the MTA EndPoint
+        Volume configuration. "
+   ::=  { saEmtaSip 2 }
+
+saEmtaSipEndPointEntry  OBJECT-TYPE
+    SYNTAX        SaEmtaSipEndPointEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        " List of attributes for a single MTA endpoint interface."
+    INDEX { ifIndex }
+    ::= { saEmtaSipEndPointTable 1 }
+
+SaEmtaSipEndPointEntry  ::= SEQUENCE {
+    saEmtaSipEndPntProxyUsername                              SnmpAdminString,
+    saEmtaSipEndPntProxyPassword                              SnmpAdminString,
+    saEmtaSipEndPntProxyPasswordEncrypt                       INTEGER,
+    saEmtaSipEndPntProxyDisplayName                           SnmpAdminString,
+    saEmtaSipEndPntProxyAddress                               SnmpAdminString,
+    saEmtaSipEndPntProxyPortRemote                            InetPortNumber,
+    saEmtaSipEndPntRegistrarAddress                           SnmpAdminString,
+    saEmtaSipEndPntRegistrarPortRemote                        InetPortNumber,
+    saEmtaSipEndPntFeaturesCallWaitingAdminStatus             INTEGER,
+    saEmtaSipEndPntFeaturesCallWaitingUserStatus              INTEGER,
+    saEmtaSipEndPntFeaturesReturnCallStatus                   INTEGER,
+    saEmtaSipEndPntFeaturesCancelCallWaitingStatus            INTEGER,
+    saEmtaSipEndPntFeaturesWarmLineStatus                     INTEGER,
+    saEmtaSipEndPntFeaturesCallerIdStatus                     INTEGER,
+    saEmtaSipEndPntFeaturesCallForwardingNumber               SnmpAdminString,
+    saEmtaSipEndPntFeaturesCallForwardingNoAnswerAdminStatus  INTEGER,
+    saEmtaSipEndPntFeaturesCallForwardingNoAnswerUserStatus   INTEGER,
+    saEmtaSipEndPntFeaturesCallForwardingBusyAdminStatus      INTEGER,
+    saEmtaSipEndPntFeaturesCallForwardingBusyUserStatus       INTEGER,
+    saEmtaSipEndPntFeaturesCallForwardingAllAdminStatus       INTEGER,
+    saEmtaSipEndPntFeaturesCallForwardingAllUserStatus        INTEGER,
+    saEmtaSipEndPntFeaturesRedialCallAdminStatus              INTEGER,
+    saEmtaSipEndPntRegisterForce                              INTEGER,
+    saEmtaSipEndPntRegisterStatus                             INTEGER,
+    saEmtaSipEndPntFeaturesCWCIDStatus                        INTEGER,
+    saEmtaSipEndPntFeaturesWarmLineNumber                     SnmpAdminString,
+    saEmtaSipEndPntUnregisteredDial                           INTEGER,
+    saEmtaSipEndPntFeaturesAutoRedialAdminStatus              INTEGER,
+    saEmtaSipEndPntFeaturesMWIAdminStatus                     INTEGER,
+    saEmtaSipEndPntFeaturesCallTransferAdminStatus            INTEGER,
+    saEmtaSipEndPntFeaturesBlockCIDAdminStatus                INTEGER,
+    saEmtaSipEndPntFeaturesCancelCIDAdminStatus               INTEGER,
+    saEmtaSipEndPntFeaturesSendCIDUserStatus                  INTEGER,
+    saEmtaSipEndPntDisplayNameToPhone                         INTEGER,
+    saEmtaSipEndPntPacketization                              INTEGER,
+    saEmtaSipEndPntFeatures3WCAdminStatus                     INTEGER,
+    saEmtaSipEndPntDataMode                                   INTEGER,
+    saEmtaSipEndPntGoodProxyEnabled                           TruthValue,
+    saEmtaSipEndPntAddToWhiteList                             TruthValue,
+    saEmtaSipEndPntStatAgentURI                               SnmpAdminString,
+    saEmtaSipEndPntFeaturesDNDAdminStatus                     INTEGER,
+    saEmtaSipEndPntFeaturesDNDUserStatus                      INTEGER,
+    saEmtaSipEndPntProxyAuthId                                SnmpAdminString,
+    saEmtaSipEndPntCodecTableOnly                             TruthValue,
+    saEmtaSipEndPntConfigUserConfBridgeURI                    SnmpAdminString,  
+	saEmtaSipEndPntOutboundProxyAddress  					  SnmpAdminString,  
+	saEmtaSipEndPntOutboundProxyPortRemote	 				  InetPortNumber 
+    }
+
+saEmtaSipEndPntProxyUsername OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "Defines username for SIP Proxy registration.
+         This is equal to phone number.
+         This is a mandatory object for endpoint to provision."
+    ::= { saEmtaSipEndPointEntry 1 }
+
+saEmtaSipEndPntProxyPassword OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "Defines password for SIP Proxy registration.
+         When read, this object returns an empty string."
+    ::= { saEmtaSipEndPointEntry 2 }
+
+saEmtaSipEndPntProxyPasswordEncrypt OBJECT-TYPE
+    SYNTAX INTEGER {
+        none(1),
+        RSA(2)
+    }
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Defines encryption method for password.
+         RSA(2): use cable modem certificate key to encrypt.
+                 The result is base64 encoded."
+    DEFVAL { 1 }
+    ::= { saEmtaSipEndPointEntry 3 }
+
+saEmtaSipEndPntProxyDisplayName OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "Defines display name for callerID."
+    ::= { saEmtaSipEndPointEntry 4 }
+
+saEmtaSipEndPntProxyAddress OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Defines FQDN or IP of SIP Proxy.
+         This is a mandatory object for endpoints to provision.
+         To use DNS SRV, include srv: in front of the fqdn. For example:
+         srv:sip.lab.sa"
+    ::= { saEmtaSipEndPointEntry 5 }
+
+saEmtaSipEndPntProxyPortRemote OBJECT-TYPE
+    SYNTAX InetPortNumber
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Defines UDP destination port for messages sent to SIP Proxy."
+    DEFVAL { 5060 }
+    ::= { saEmtaSipEndPointEntry 6 }
+
+saEmtaSipEndPntRegistrarAddress OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Defines FQDN or IP of SIP Registrar.
+         If not specified, this object equals to saEmtaSipEndPntProxyAddress."
+    ::= { saEmtaSipEndPointEntry 7 }
+
+saEmtaSipEndPntRegistrarPortRemote OBJECT-TYPE
+    SYNTAX InetPortNumber
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Defines UDP destination port for SIP messages sent to SIP Registrar."
+    DEFVAL { 5060 }
+    ::= { saEmtaSipEndPointEntry 8 }
+
+
+-- CALL WAITING
+
+saEmtaSipEndPntFeaturesCallWaitingAdminStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Controls call waiting feature status.
+        If set to disable(0), user cannot turn it on.
+        If set to enable(1), user can control the status of call waiting
+        with dialing codes (if present)."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 9 }
+
+saEmtaSipEndPntFeaturesCallWaitingUserStatus OBJECT-TYPE 
+    SYNTAX INTEGER { 
+        disable(0), 
+        enable(1) 
+    } 
+    MAX-ACCESS read-write 
+    STATUS current 
+    DESCRIPTION 
+        "Reads call waiting feature status. 
+        It reads disable(0) when: 
+        - saEmtaSipFeaturesCallWaitingAdminStatus is set to disable(0), or 
+        - saEmtaSipFeaturesCallWaitingAdminStatus is set to enable(1) and 
+        user turned it off dialing saEmtaSipFeaturesCallWaitingOffDigitMap. 
+        It reads enable(1) when: 
+        - saEmtaSipFeaturesCallWaitingAdminStatus is set to enable(1) and 
+        user turns it on dialing saEmtaSipFeaturesCallWaitingOnDigitMap.
+        Note: the state of CW is stored in non-vol."
+    ::= { saEmtaSipEndPointEntry 10 } 
+
+
+-- RETURN CALL
+
+saEmtaSipEndPntFeaturesReturnCallStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Controls Return Call feature status."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 11 }
+
+
+-- CANCEL CALL WAITING
+
+saEmtaSipEndPntFeaturesCancelCallWaitingStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Controls Cancel Call Waiting feature status."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 12 }
+
+
+-- WARM LINE
+
+saEmtaSipEndPntFeaturesWarmLineStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Controls Warm Line feature admin status. The state of the user
+         status is stored in non-vol and by default is disabled.
+         Any time the operator changes the admin status to disable (for
+         example by removing the saEmtaSipEndPntFeaturesWarmLineStatus
+         from config file), the user status is changed to disabled
+         and the number is erased."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 13 }
+
+
+-- CALLER ID
+
+saEmtaSipEndPntFeaturesCallerIdStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1),
+        enableLogic(2)
+    }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Controls CallerID (CLIP) feature status.
+         For 2:
+           IF (FROM-DisplayName == Anonymous)
+             THEN (Send reason for absence 'P' as CLI-number.)
+           ELSEIF (FROM-DisplayName == valid_number)
+             THEN (Use FROM-DisplayName as CLI-number.)
+           ELSEIF (FROM-URI == valid_number)
+             THEN (Use FROM-URI as CLI-number.)
+           ELSE (send nothing to CLI-number)
+           ENDIF
+         "
+    DEFVAL { 1 }
+    ::= { saEmtaSipEndPointEntry 14 }
+
+
+-- CALL FORWARDING NUMBER
+
+saEmtaSipEndPntFeaturesCallForwardingNumber OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Call Forwarding number as entered by the user.
+         Can be also set by operator.
+         Note: this number is stored in non-vol."
+    ::= { saEmtaSipEndPointEntry 15 }
+
+
+-- CALL FORWARDING NO ANSWER
+
+saEmtaSipEndPntFeaturesCallForwardingNoAnswerAdminStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Controls Call Forwarding No Answer feature status.
+        If set to disable(0), user cannot turn it on.
+        If set to enable(1), user can control the status with dialing codes (if present)."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 16 }
+
+saEmtaSipEndPntFeaturesCallForwardingNoAnswerUserStatus OBJECT-TYPE 
+    SYNTAX INTEGER { 
+        disable(0), 
+        enable(1) 
+    } 
+    MAX-ACCESS read-write 
+    STATUS current 
+    DESCRIPTION 
+        "Controls Call Forwarding No Answer user status. 
+        It reads disable(0) when: 
+        - AdminStatus is set to disable(0), or 
+        - AdminStatus is set to enable(1) and 
+        user turned it off dialing disable code. 
+        It reads enable(1) when: 
+        - AdminStatus is set to enable(1) and 
+        user turns it on dialing enable code.
+        Note: the state of this feature is stored in non-vol and is disable by default."
+    ::= { saEmtaSipEndPointEntry 17 } 
+
+
+-- CALL FORWARDING BUSY
+
+saEmtaSipEndPntFeaturesCallForwardingBusyAdminStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Controls Call Forwarding Busy feature status.
+        If set to disable(0), user cannot turn it on.
+        If set to enable(1), user can control the status with dialing codes (if present)."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 18 }
+
+saEmtaSipEndPntFeaturesCallForwardingBusyUserStatus OBJECT-TYPE 
+    SYNTAX INTEGER { 
+        disable(0), 
+        enable(1) 
+    } 
+    MAX-ACCESS read-write 
+    STATUS current 
+    DESCRIPTION 
+        "Reads Call Forwarding Busy feature status. 
+        It reads disable(0) when: 
+        - AdminStatus is set to disable(0), or 
+        - AdminStatus is set to enable(1) and 
+        user turned it off dialing disable code. 
+        It reads enable(1) when: 
+        - AdminStatus is set to enable(1) and 
+        user turns it on dialing enable code.
+        Note: the state of this feature is stored in non-vol and is disable by default."
+    ::= { saEmtaSipEndPointEntry 19 } 
+
+
+-- CALL FORWARDING UNCONDITIONAL
+
+saEmtaSipEndPntFeaturesCallForwardingAllAdminStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Controls Call Forwarding Unconditional feature status.
+        If set to disable(0), user cannot turn it on.
+        If set to enable(1), user can control the status with dialing codes (if present)."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 20 }
+
+saEmtaSipEndPntFeaturesCallForwardingAllUserStatus OBJECT-TYPE 
+    SYNTAX INTEGER { 
+        disable(0), 
+        enable(1) 
+    } 
+    MAX-ACCESS read-write 
+    STATUS current 
+    DESCRIPTION 
+        "Reads Call Forwarding Unconditional feature status. 
+        It reads disable(0) when: 
+        - AdminStatus is set to disable(0), or 
+        - AdminStatus is set to enable(1) and 
+        user turned it off dialing disable code. 
+        It reads enable(1) when: 
+        - AdminStatus is set to enable(1) and 
+        user turns it on dialing enable code.
+        Note: the state of this feature is stored in non-vol and is disable by default."
+    ::= { saEmtaSipEndPointEntry 21 } 
+
+
+-- REDIAL CALL
+
+saEmtaSipEndPntFeaturesRedialCallAdminStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Controls Redial Call feature status."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 22 }
+
+
+-- UNSOLICITED REGISTER
+
+saEmtaSipEndPntRegisterForce OBJECT-TYPE
+    SYNTAX INTEGER {
+        idle(0),
+        send(1),
+        offhookDisconnected(2)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Forces an endpoint to REGISTER (makes Register Attempt timer expire).
+         When set to send(1), registration starts immediately. The object will
+         return the value that was set before the send.
+         When set to offhookDisconnected(2), endpoint will try to REGISTER immediately upon
+         phone going offhook only if current state of the endpoint is not registered."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 23 }
+
+
+-- Register Status
+
+saEmtaSipEndPntRegisterStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        notRegistered(0),
+        registered(1),
+        notProvisioned(2)
+    }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Returns registration status of an endpoint:
+         0: an endpoint is provisioned but not registered
+         1: an endpoint is registered
+         2: an endpoint is not provisioned because:
+           - ifAdminStatus is set to down, or
+           - saEmtaSipEndPntProxyUsername is not set, or
+           - saEmtaSipEndPntProxyAddress is not set."
+    ::= { saEmtaSipEndPointEntry 24 }
+
+
+-- CALL WAITING CALLER ID
+
+saEmtaSipEndPntFeaturesCWCIDStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Controls CallerID (CLIP) feature status.
+         Added 051013"
+    DEFVAL { 1 }
+    ::= { saEmtaSipEndPointEntry 25 }
+
+
+-- WARM LINE NUMBER
+
+saEmtaSipEndPntFeaturesWarmLineNumber OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Shows Warm line number as entered by the user.
+         Note: this number is stored in non-vol
+         If user or operator disable the feature, the number is erased.
+         This object can only be set when
+         saEmtaSipEndPntFeaturesWarmLineStatus is enabled.
+         When set, the user status is set to enable."
+    ::= { saEmtaSipEndPointEntry 26 }
+
+
+-- NOT REGISTERED BEHAVIOR
+
+saEmtaSipEndPntUnregisteredDial OBJECT-TYPE
+    SYNTAX INTEGER {
+        deny(0),
+        allow(1)
+    }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "Defines wheter is it possible to dial out if not registered.
+         0: don't allow to dial out, dialtone is not played,
+         1: allow to dial out, dialtone is played."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 27 }
+
+
+-- AUTO REDIAL
+
+saEmtaSipEndPntFeaturesAutoRedialAdminStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1),
+        activeNow(2)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Controls Automatic Redial feature status.
+         activeNow(2) is returned when the feature is in use."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 28 }
+
+-- MWI status
+
+saEmtaSipEndPntFeaturesMWIAdminStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Controls Message Waiting Indicator feature status.
+         When enabled, an endpoint will send a SUBSCRIBE message."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 29 }
+
+-- call transfer status
+
+saEmtaSipEndPntFeaturesCallTransferAdminStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Controls Call Transfer feature status.
+         When enabled:  A-B, A hf, A-C, A hu, REFER to C
+         When disabled: A-B, A hf, A-C, A hu, A rings
+                        just like regular 3 way call."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 30 }
+
+-- block callerID
+
+saEmtaSipEndPntFeaturesBlockCIDAdminStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Controls CallerID Block feature status."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 31 }
+
+-- cancel callerID
+
+saEmtaSipEndPntFeaturesCancelCIDAdminStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Controls Cancel CallerID feature status."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 32 }
+
+saEmtaSipEndPntFeaturesSendCIDUserStatus OBJECT-TYPE 
+    SYNTAX INTEGER { 
+        disable(0), 
+        enable(1) 
+    } 
+    MAX-ACCESS read-write 
+    STATUS current 
+    DESCRIPTION 
+        "Reads sending callerID feature user status.
+        It reads enable(1) when: 
+        - saEmtaSipEndPntFeaturesBlockCIDAdminStatus is set to disable(0), or 
+        - saEmtaSipEndPntFeaturesBlockCIDAdminStatus is set to enable(1) and 
+        user turns CID sending on by dialing saEmtaSipDeviceFeaturesEnableCIDDigitMap.
+        It reads disable(0) when: 
+        - saEmtaSipEndPntFeaturesBlockCIDAdminStatus is set to enable(1) and 
+        user turns CID sending off by dialing saEmtaSipDeviceFeaturesDisableCIDDigitMap. 
+        Note: the state is stored in non-vol."
+    ::= { saEmtaSipEndPointEntry 33 }
+
+-- display name control
+-- OBSOLETE
+
+saEmtaSipEndPntDisplayNameToPhone OBJECT-TYPE
+    SYNTAX INTEGER {
+        send(1),
+        suppress(2),
+        useNumber(3)
+    }
+    MAX-ACCESS read-write
+    STATUS obsolete
+    DESCRIPTION
+        "Controls whether the endpoint sends display-name in callerID
+         to the phone. The display-name comes from 'From:' field in
+         SIP header.
+         1: If present, send display-name to the phone.
+         2: Never send display-name to the phone.
+         3: If not present, send the number as display-name."
+    DEFVAL { 1 }
+    ::= { saEmtaSipEndPointEntry 34 }
+
+-- packetization
+
+saEmtaSipEndPntPacketization OBJECT-TYPE
+    SYNTAX INTEGER {
+        ten(10),
+        twenty(20),
+        thirty(30)
+        }
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Controls packetization rate for an endpoint."
+    DEFVAL { 20 }
+    ::= { saEmtaSipEndPointEntry 35 }
+
+-- 3 WAY CALL
+
+saEmtaSipEndPntFeatures3WCAdminStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Controls 3 way call feature."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 36 }
+
+-- T.38 control
+
+saEmtaSipEndPntDataMode OBJECT-TYPE
+    SYNTAX INTEGER {
+        dataModeVBD(1),
+        dataModeT38(2),
+        dataModeForceT38(3)
+        }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The preferred mode for data exchange. There may be cases 
+         where it is desired to either force T.38 to negotiate or prevent 
+         T.38 from negotiating.   The following options are supported: 
+         dataModeVBD(1) - Voice Band Data mode - Fax passed as audio using audio codec,
+                          no T38.
+         dataModeT38(2) - If T.38 options are present in INVITE, then negotiate.
+         dataModeForceT38(3) - Force T.38 if incoming INVITE includes T38 and/or
+                               other media to chose from"
+    DEFVAL { dataModeVBD }
+    ::= { saEmtaSipEndPointEntry 37 }
+
+-- WELL KNOWN PROXY
+
+saEmtaSipEndPntGoodProxyEnabled OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "When true, the end point will accept packets originating
+         from a known SIP proxy only. If the packets originate
+         from an unknown SIP Proxy they are not processed."
+    DEFVAL { false }
+    ::= { saEmtaSipEndPointEntry 38 }
+
+saEmtaSipEndPntAddToWhiteList OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "When true, the endpoint's location (IP address) will be
+         added to the white list each endpoint maintains. Enable
+         this if saEmtaSipEndPntGoodProxyEnabled is true to allow
+         calls originating from one endpoint to be accepted by
+         the other on the same device."
+    DEFVAL { true }
+    ::= { saEmtaSipEndPointEntry 39 }
+
+-- STATS AGENT
+
+saEmtaSipEndPntStatAgentURI  OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "URI of the call statistics agent, which is where call
+         statistics collected by the endpoint are reported.
+         The call statistics agent may be specified as a URI, FQDN
+         or IP address. This specifies the SIP server to which
+         PUBLISH requests will be sent at the end of each call to
+         report the statistics from that call."
+    DEFVAL { "" }
+    ::= { saEmtaSipEndPointEntry 40 }
+
+-- DO NOT DISTURB FEATURE
+
+saEmtaSipEndPntFeaturesDNDAdminStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(0),
+        enable(1)
+    }
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Controls do not disturb feature status.
+        If set to disable(0), user cannot turn it on.
+        If set to enable(1), user can control the status
+        with dialing codes (if present)."
+    DEFVAL { 0 }
+    ::= { saEmtaSipEndPointEntry 41 }
+
+saEmtaSipEndPntFeaturesDNDUserStatus OBJECT-TYPE 
+    SYNTAX INTEGER { 
+        disable(0), 
+        enable(1) 
+    } 
+    MAX-ACCESS read-write 
+    STATUS current 
+    DESCRIPTION 
+        "Do not disturb feature user status.
+        Note: the state is stored in non-vol."
+    ::= { saEmtaSipEndPointEntry 42 } 
+
+saEmtaSipEndPntProxyAuthId OBJECT-TYPE
+    SYNTAX SnmpAdminString (SIZE (0..40))
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Defines Authentication for SIP Proxy registration if different
+         from the username."
+    DEFVAL { "" }
+    ::= { saEmtaSipEndPointEntry 43 }
+
+saEmtaSipEndPntCodecTableOnly OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The indicator of whether to use the list of preferred codecs,
+         provided in the codec table, exclusively when negotiating
+         codecs. True inidicates using the codec table exclusively,
+         false means use the order of codecs in the table in addition
+         to other codecs in random order."
+    DEFVAL { true }
+    ::= { saEmtaSipEndPointEntry 44 }
+
+saEmtaSipEndPntConfigUserConfBridgeURI  OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The URI for the conference bridge associated with this endpoint. 
+         If set to NULL, conferencing is hosted locally."
+    DEFVAL { "" }
+    ::= { saEmtaSipEndPointEntry 45 }
+
+-- Outbound Proxy table --
+saEmtaSipEndPntOutboundProxyAddress OBJECT-TYPE
+    SYNTAX SnmpAdminString
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "SIP Outbound Proxy address: this can be a FQDN or an IP address (in string format).
+         If not set, default is '0.0.0.0'"
+    DEFVAL {"0.0.0.0"}
+    ::= { saEmtaSipEndPointEntry 46 }
+
+saEmtaSipEndPntOutboundProxyPortRemote OBJECT-TYPE
+    SYNTAX InetPortNumber
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "SIP Outbound proxy port: this is the port number used for signaling to the outbound proxy.
+         The value of '0' is a reserved value which tells the SIP stack to use the default
+         port.  When setting the value '0' furthermore, the SIP stack will not add port information
+         for any SIP URI generated by it.  Some third party SIP entities are sensible to
+         SIP URI format and are not able to properly parse a SIP URI containing the
+         port number.  Therefore, the configured value of 0 should be used to prevent
+         SIP URI format with the port number information"
+    DEFVAL { 5060 }
+    ::= { saEmtaSipEndPointEntry 47 }
+
+-- ENDPOINT TABLE ENDS HERE
+-- ========================
+
+
+-- =======================
+-- CODEC TABLE STARTS HERE
+
+saEmtaSipCodec   OBJECT IDENTIFIER ::=  { saEmtaSip 3 }
+
+saEmtaSipCodecTable    OBJECT-TYPE
+    SYNTAX        SEQUENCE OF SaEmtaSipCodecEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "This table contains a list of preferred codecs for each endpoint.
+         The default codecs are G.711 and G.729."
+    ::=  { saEmtaSipCodec 1 }
+
+saEmtaSipCodecEntry    OBJECT-TYPE
+    SYNTAX        SaEmtaSipCodecEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "Each entry contains the preferred codec list for each ifIndex."
+    INDEX { ifIndex, saEmtaSipCodecRank }
+    ::=  { saEmtaSipCodecTable 1 }
+
+SaEmtaSipCodecEntry  ::= SEQUENCE {
+    saEmtaSipCodecRank   INTEGER,
+    saEmtaSipCodecType   PktcCodecType
+    }
+
+saEmtaSipCodecRank  OBJECT-TYPE
+    SYNTAX INTEGER (1..6)
+    MAX-ACCESS     not-accessible
+    STATUS         current
+    DESCRIPTION
+        "Index for specifying the rank of a given codec for the endpoint.
+         For example, a value of 1 means most preferred. "
+    ::= { saEmtaSipCodecEntry 1}
+
+
+saEmtaSipCodecType OBJECT-TYPE
+    SYNTAX      PktcCodecType
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The codec to be used."
+    ::= { saEmtaSipCodecEntry 2 }
+
+-- CODEC TABLE ENDS HERE
+-- =====================
+
+-- ======================
+-- NAT OBJECTS START HERE
+
+saEmtaSipNat   OBJECT IDENTIFIER ::=  { saEmtaSip 4 }
+
+saEmtaSipNatStunServerId  OBJECT-TYPE
+    SYNTAX SnmpAdminString (SIZE (0..40))
+    MAX-ACCESS     read-write
+    STATUS         current
+    DESCRIPTION
+        "The STUN server where STUN messages are directed."
+    DEFVAL { "0.0.0.0" }
+    ::= { saEmtaSipNat 1 }
+
+saEmtaSipNatStunServerPort OBJECT-TYPE
+    SYNTAX      InetPortNumber (0| 1025..65535)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The port number for STUN server messages.
+         The value of '0' is a reserved value which tells the SIP stack to use the default
+         port.  When setting the value '0' furthermore, the SIP stack will not add port information
+         for any SIP URI generated by it.  Some third party SIP entities are sensible to
+         SIP URI format and are not able to properly parse a SIP URI containing the
+         port number.  Therefore, the configured value of 0 should be used to prevent
+         SIP URI format with the port number information."
+    DEFVAL { 0 }
+    ::= { saEmtaSipNat 2 }
+
+saEmtaSipNatWanId  OBJECT-TYPE
+    SYNTAX SnmpAdminString (SIZE (0..40))
+    MAX-ACCESS     read-write
+    STATUS         current
+    DESCRIPTION
+        "Those are the address used by the stack when it is setup behind a NAT."
+    DEFVAL { "0.0.0.0" }
+    ::= { saEmtaSipNat 3 }
+
+saEmtaSipNatWanPort OBJECT-TYPE
+    SYNTAX      InetPortNumber (0|1025..65535)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The port number for sending to the NAT.
+         The value of '0' is a reserved value which tells the SIP stack to use the default
+         port.  When setting the value '0' furthermore, the SIP stack will not add port information
+         for any SIP URI generated by it.  Some third party SIP entities are sensible to
+         SIP URI format and are not able to properly parse a SIP URI containing the
+         port number.  Therefore, the configured value of 0 should be used to prevent
+         SIP URI format with the port number information."
+    DEFVAL { 0 }
+    ::= { saEmtaSipNat 4 }
+
+saEmtaSipNatKeepAliveMsgType OBJECT-TYPE
+    SYNTAX INTEGER {
+        keepAliveNone(0),
+        keepAliveNotifySip(1),
+        keepAliveRegisterSip(2),
+        keepAlivePingSip(3)
+        }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Controls whether or not NAT keep alive messages are needed to be sent by the MTA
+        and if so what kind.  Value is enum with the following values:
+        0 (default): no NAT keep alive,
+        1: use NOTIFY SIP method for NAT keepalive,
+        2: use REGISTER SIP method for NAT keepalive,
+        3: use PING SIP method for NAT keepalive."
+    DEFVAL { 0 }
+    ::= { saEmtaSipNat 5 }
+
+saEmtaSipNatKeepAliveTO OBJECT-TYPE
+    SYNTAX  Unsigned32
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Time out for NAT keep alive messages when feature is enabled."
+    DEFVAL { 30 }
+    ::= { saEmtaSipNat 6 }
+
+saEmtaSipNatKeepAliveFqdn OBJECT-TYPE
+    SYNTAX  SnmpAdminString (SIZE (0..40))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "FQDN (or dotted IP address) of the destination for the NAT keep alive message"
+    DEFVAL { "" }
+    ::= { saEmtaSipNat 7 }
+
+-- NAT OBJECTS END HERE
+-- ====================
+
+
+END
