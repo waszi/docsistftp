@@ -1,0 +1,21 @@
+version: '3'
+services:
+  tftp:
+    restart: always
+    container_name: tftp
+    build: .
+    network_mode: host
+    volumes:
+      - ./tftpboot:/tftpboot
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "10"
+    environment:
+      DOCSISTFTP_ROOT_DIR: /tftpboot
+      DOCSISTFTP_SHARED_SECRET: key
+      DOCSISTFTP_UPGRADE_SERVER: 1.2.3.4
+      DOCSISTFTP_LOG_FORMAT: json
+      DOCSISTFTP_DB_DRIVER: postgres
+      DOCSISTFTP_DB_DSN: postgres://user:pass@host/db

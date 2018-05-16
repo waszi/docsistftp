@@ -21,6 +21,7 @@ func init() {
     viper.SetDefault("db_driver", "postgres")
     viper.SetDefault("db_dsn", "")
     viper.SetDefault("upgrade_server", "0.0.0.0")
+    viper.SetDefault("log_format", "text")
 
     viper.SetConfigName("docsistftp")
     viper.SetEnvPrefix("DOCSISTFTP")
@@ -28,7 +29,14 @@ func init() {
     viper.AddConfigPath(".")
     viper.ReadInConfig()
     viper.AutomaticEnv()
+
+    if viper.GetString("log_format") == "json" {
+	log.Formatter =&logrus.JSONFormatter{}
+    } else {
+	log.Formatter = &logrus.TextFormatter{}
+    }
 }
+
 
 func main() {
     log.Out = os.Stdout

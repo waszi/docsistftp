@@ -1,6 +1,7 @@
 root_dir: /tftpboot
 shared_secret: key
 upgrade_server: 1.2.3.4
+log_format: json
 
 # supported: mysql, postgres, sqlite3
 db_driver: postgres
