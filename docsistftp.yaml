@@ -1,3 +1,4 @@
+listen: :69
 root_dir: /tftpboot
 shared_secret: key
 upgrade_server: 1.2.3.4
@@ -9,3 +10,8 @@ db_dsn: "postgres://user:pass@localhost/db?sslmode=disable"
 #db_dsn: "/etc/db.sqlite3"
 #db_dsn: "user:pass@tcp(127.0.0.1:3306)/db"
 
+rewrites:
+  "cm/([0-9A-Fa-f]{12})/([^/]+)/(.*)": "cm.anko?mac=$1;model=$2;hwver=$3"
+  "cm-([0-9A-Fa-f]{12})-([^-]+)-(.*)": "cm.anko?mac=$1;model=$2;hwver=$3"
+  "mta/([0-9A-Fa-f]{12})/([^/]+)/(.*)": "mta.anko?mac=$1;model=$2;hwver=$3"
+  "mta-([0-9A-Fa-f]{12})-([^-]+)-(.*)": "mta..anko?mac=$1;model=$2;hwver=$3"

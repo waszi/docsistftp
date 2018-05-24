@@ -289,6 +289,18 @@
 			"path": "gopkg.in/yaml.v2",
 			"revision": "5420a8b6744d3b0345ab293f6fcba19c978f1183",
 			"revisionTime": "2018-03-28T19:50:20Z"
+		},
+		{
+			"checksumSHA1": "V9JHRT3wNULmaeVqrbt3s3Eligs=",
+			"path": "pack.ag/tftp",
+			"revision": "d0fca786a8ea95ad4515bb83b2c34a11ec6a3fc0",
+			"revisionTime": "2017-03-06T01:16:38Z"
+		},
+		{
+			"checksumSHA1": "Y4VdWtiSOnxPFJH8VeFOtYngqRM=",
+			"path": "pack.ag/tftp/netascii",
+			"revision": "d0fca786a8ea95ad4515bb83b2c34a11ec6a3fc0",
+			"revisionTime": "2017-03-06T01:16:38Z"
 		}
 	],
 	"rootPath": "github.com/waszi/docsistftp"

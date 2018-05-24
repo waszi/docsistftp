@@ -7,7 +7,6 @@ import (
     "io/ioutil"
     "github.com/cdevr/WapSNMP"
     "github.com/fullsailor/pkcs7"
-    "github.com/spf13/viper"
 )
 
 func TLV(t int64, v ...[]byte) []byte {
@@ -54,8 +53,7 @@ func ChunkSplit(buf []byte, lim int) [][]byte {
 }
 
 func ExtractCVC(filename string) ([]byte) {
-    full_path := filepath.Join(viper.GetString("root_dir"), filename)
-    content, err := ioutil.ReadFile(full_path)
+    content, err := ioutil.ReadFile(filepath.Join("/", filename))
     if err != nil {
 	log.Error(err)
 	return []byte("")
@@ -72,23 +70,22 @@ func ExtractCVC(filename string) ([]byte) {
 }
 
 func GetFirmwarePath(model string, hwver string) string {
-    full_path := filepath.Join(viper.GetString("root_dir"), "firmware", fmt.Sprintf("%s-%s", model, hwver), "current")
-    log.Printf("Checking firmware path: %v", full_path)
-    if _, err := os.Stat(full_path); err == nil {
-	log.Printf("Found firmware: %v", full_path)
-	if target, err := os.Readlink(full_path); err == nil {
-	    return filepath.Join("firmware", fmt.Sprintf("%s-%s", model, hwver), target)
+    paths := []string{
+	filepath.Join("/firmware", fmt.Sprintf("%s-%s", model, hwver), "current"),
+	filepath.Join("/firmware", model, "current"),
+    }
+    for _, p := range paths {
+	if _, err := os.Stat(p); err == nil {
+	    sym, err := filepath.EvalSymlinks(p)
+	    if err != nil {
+		continue
+	    }
+	    rel, err := filepath.Rel("/", sym)
+	    if err != nil {
+		continue
+	    }
+	    return rel
 	}
     }
-
-    full_path = filepath.Join(viper.GetString("root_dir"), "firmware", model, "current")
-    log.Printf("Checking firmware path: %v", full_path)
-    if _, err := os.Stat(full_path); err == nil {
-	log.Printf("Found firmware: %v", full_path)
-	if target, err := os.Readlink(full_path); err == nil {
-	    return filepath.Join("firmware", model, target)
-	}
-    }
-
     return ""
 }

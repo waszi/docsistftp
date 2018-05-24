@@ -2,9 +2,9 @@ package main
 
 import (
     "os"
-    "time"
+    "syscall"
     "github.com/spf13/viper"
-    "github.com/pin/tftp"
+    "pack.ag/tftp"
     "github.com/sirupsen/logrus"
 
     "github.com/jmoiron/sqlx"
@@ -16,12 +16,14 @@ import (
 var log = logrus.New()
 
 func init() {
+    viper.SetDefault("listen", ":69")
     viper.SetDefault("root_dir", "/tftpboot")
     viper.SetDefault("shared_secret", "key")
     viper.SetDefault("db_driver", "postgres")
     viper.SetDefault("db_dsn", "")
     viper.SetDefault("upgrade_server", "0.0.0.0")
     viper.SetDefault("log_format", "text")
+    viper.SetDefault("rewrites", map[string]string{} )
 
     viper.SetConfigName("docsistftp")
     viper.SetEnvPrefix("DOCSISTFTP")
@@ -31,7 +33,7 @@ func init() {
     viper.AutomaticEnv()
 
     if viper.GetString("log_format") == "json" {
-	log.Formatter =&logrus.JSONFormatter{}
+	log.Formatter = &logrus.JSONFormatter{}
     } else {
 	log.Formatter = &logrus.TextFormatter{}
     }
@@ -46,12 +48,20 @@ func main() {
     }
     defer db.Close()
 
-    h := NewServerHandler(db)
-    s := tftp.NewServer(h.ReadHandler, h.WriteHandler)
-    s.SetTimeout(5 * time.Second)
-    log.Println("Starting server")
-    err = s.ListenAndServe(":69")
+    if err := syscall.Chroot(viper.GetString("root_dir")); err != nil {
+	log.Fatal(err)
+    }
+
+    os.Chdir("/")
+
+    server, err := tftp.NewServer(viper.GetString("listen"))
     if err != nil {
 	log.Fatal(err)
     }
+
+    handler := NewServerHandler(db)
+    server.ReadHandler(handler)
+    log.Fatal(server.ListenAndServe())
+
 }
+

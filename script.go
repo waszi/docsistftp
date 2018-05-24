@@ -23,11 +23,11 @@ type Script struct {
     filename string
     env *vm.Env
     db *sqlx.DB
-    query url.Values
+    req *url.URL
     Output *bytes.Buffer
 }
 
-func NewScript(filename string, db *sqlx.DB, query url.Values) *Script {
+func NewScript(filename string, db *sqlx.DB, req *url.URL) *Script {
     b, err := ioutil.ReadFile(filename)
     if err != nil {
 	log.Fatal(err)
@@ -72,6 +72,17 @@ func NewScript(filename string, db *sqlx.DB, query url.Values) *Script {
     env.Define("tlv", TLV)
     env.Define("snmp", Snmp)
     env.Define("snmp_gauge", SnmpGauge)
+    env.Define("snmp_ip", func(v string) net.IP {
+        ip := net.ParseIP(v)
+        if ip == nil {
+	    return nil
+	}
+	ip = ip.To4()
+	if ip == nil {
+	    return nil
+	}
+	return ip
+    })
     env.Define("extract_cvc", ExtractCVC)
     env.Define("chunk_split", ChunkSplit)
     env.Define("get_firmware_path", GetFirmwarePath)
@@ -80,13 +91,13 @@ func NewScript(filename string, db *sqlx.DB, query url.Values) *Script {
     packages.DefineImport(env)
 
     output := bytes.NewBuffer(nil)
-    return &Script{string(b), env, db, query, output}
+    return &Script{string(b), env, db, req, output}
 }
 
 func (e *Script) Execute() (*bytes.Buffer, error) {
     e.env.Define("tlv_add", e.TlvAdd)
     e.env.Define("sql_row", e.SqlQueryRow)
-    e.env.Define("query", e.query)
+    e.env.Define("req", e.req)
 
     _, err := e.env.Execute(e.filename)
     if err != nil {
@@ -103,8 +114,8 @@ func (e *Script) Execute() (*bytes.Buffer, error) {
     if t, _ := e.env.Get("config_type"); t == "cm" {
 	e.CmMic()
 	e.CmtsMic()
+	e.Pad()
     }
-
     return e.Output, nil
 }
 
@@ -159,10 +170,12 @@ func (e *Script) CmtsMic() {
     e.TlvAdd( 7, mac.Sum(nil) )
 }
 
-
-/*
 func (e *Script) Pad() {
-    pads = 4 - (1 + len(result)) % 4;
-    return pack("B", 255) + pads * chr(0) 
+    padLen := 4 - (1 + len(e.Output.Bytes())) % 4;
+
+    e.Output.Write([]byte{byte(255)})
+
+    for n := 1; n <= padLen; n++ {
+	e.Output.Write([]byte{byte(0)})
+    }
 }
-*/
