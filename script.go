@@ -8,6 +8,7 @@ import (
     "net/url"
     "crypto/hmac"
     "crypto/md5"
+    "crypto/sha1"
     "encoding/hex"
     "encoding/binary"
     "io/ioutil"
@@ -116,6 +117,9 @@ func (e *Script) Execute() (*bytes.Buffer, error) {
 	e.CmtsMic()
 	e.Pad()
     }
+    if t, _ := e.env.Get("config_type"); t == "mta" {
+	e.MtaMic()
+    }
     return e.Output, nil
 }
 
@@ -137,6 +141,14 @@ func (e *Script) CmMic() {
     digest := md5.New()
     digest.Write(e.Output.Bytes())
     e.TlvAdd( 6, digest.Sum(nil) )
+}
+
+func (e *Script) MtaMic() {
+    digest := sha1.New()
+    digest.Write(e.Output.Bytes())
+    digest.Write(TLV(254, []byte{uint8(255)}))
+    e.TlvAdd( 11, Snmp("1.3.6.1.4.1.7432.1.1.2.9.0", string(digest.Sum(nil))) )
+    e.TlvAdd( 254, []byte{uint8(255)} )
 }
 
 func (e *Script) CmtsMic() {

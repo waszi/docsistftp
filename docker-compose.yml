@@ -13,3 +13,16 @@ services:
       options:
         max-size: "100m"
         max-file: "10"
+
+  http:
+    restart: always
+    container_name: http
+    image: nginx
+    network_mode: host
+    volumes:
+      - ./tftpboot:/usr/share/nginx/html:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "10"
